@@ -1,5 +1,5 @@
 const express = require('express')
-const upload = require('multer')
+const upload = require('multer')();
 const mysql = require('mysql')
 const mimeDB = require('mime-db')
 const Minio = require('minio')
