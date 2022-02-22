@@ -4,7 +4,7 @@ const mysql = require('mysql')
 const mimeDB = require('mime-db')
 const Minio = require('minio')
 
-const config = require('config.json')
+const config = require('./config.json')
 
 const app = express()
 const minio = new Minio.Client(config.minio)
