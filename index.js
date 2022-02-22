@@ -26,7 +26,7 @@ const escape = mysql.escape
 
 function uploadFile(fileName, file) {
     return new Promise(((resolve, reject) => {
-        minio.putObject('malimages', fileName, file, function(err) {
+        minio.putObject(config.minioBucket, fileName, file, function(err) {
             if (err) reject(err)
             resolve()
         })
