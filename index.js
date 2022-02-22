@@ -61,7 +61,7 @@ app.post('/api/upload', upload.single('sharex'), async (req, res) => {
 
     let url = `https://i.moocow.dev/${fileName}`
 
-    await query(`INSERT INTO images (fileId, extension, originalName, size, timestamp) VALUES (${fileId}, ${extension}, ${escape(file.originalname)}, ${file.size}, ${Date.now()})`)
+    await query(`INSERT INTO images (fileId, extension, originalName, size, timestamp) VALUES (${escape(fileId)}, ${escape(extension)}, ${escape(file.originalname)}, ${file.size}, ${Date.now()})`)
 
     res.json({error: false, message: "Uploaded!", url: url})
 })
