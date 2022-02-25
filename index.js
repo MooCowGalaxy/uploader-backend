@@ -49,7 +49,7 @@ app.post('/api/upload', upload.single('sharex'), async (req, res) => {
 
     if (file.fieldname !== "sharex") return res.json({error: true, message: "Invalid file"})
 
-    let extension = file.split('.').slice(-1)
+    let extension = file.originalname.split('.').slice(-1)
     let fileId = createTokenString()
     let fileName = `${fileId}.${extension}`
     await uploadFile(fileName, file.buffer)
