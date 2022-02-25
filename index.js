@@ -1,7 +1,6 @@
 const express = require('express')
 const upload = require('multer')();
 const mysql = require('mysql')
-const mimeDB = require('mime-db')
 const Minio = require('minio')
 
 const config = require('./config.json')
@@ -33,10 +32,6 @@ function uploadFile(fileName, file) {
     }))
 }
 
-function getExtension(mimetype) {
-    return mimeDB[mimetype].extensions[0]
-}
-
 function createTokenString() {
     let base62 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890".split('')
     let token = ""
@@ -54,7 +49,7 @@ app.post('/api/upload', upload.single('sharex'), async (req, res) => {
 
     if (file.fieldname !== "sharex") return res.json({error: true, message: "Invalid file"})
 
-    let extension = getExtension(file.mimetype)
+    let extension = file.split('.').slice(-1)
     let fileId = createTokenString()
     let fileName = `${fileId}.${extension}`
     await uploadFile(fileName, file.buffer)
