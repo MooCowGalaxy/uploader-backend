@@ -68,6 +68,7 @@ app.get('/:id', async (req, res) => {
     let results = await query(`SELECT * FROM images WHERE fileId = ${escape(fileId)} AND extension = ${escape(extension)}`)
     if (results.length === 0) return res.status(404).send("File not found")
 
+    res.header("Access-Control-Allow-Origin", "*")
     res.sendFile(`/mnt/data/i.moocow.dev/${fileName}`)
 })
 app.get('/', async (req, res) => {
