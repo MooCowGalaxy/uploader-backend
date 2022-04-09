@@ -54,7 +54,7 @@ app.post('/api/upload', upload.single('sharex'), async (req, res) => {
     let fileName = `${fileId}.${extension}`
     await uploadFile(fileName, file.buffer)
 
-    let url = `https://i.moocow.dev/${fileName}`
+    let url = `https://moo.rocks/${fileName}`
 
     await query(`INSERT INTO images (fileId, extension, originalName, size, timestamp) VALUES (${escape(fileId)}, ${escape(extension)}, ${escape(file.originalname)}, ${file.size}, ${Date.now()})`)
 
