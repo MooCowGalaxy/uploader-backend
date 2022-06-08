@@ -19,7 +19,8 @@ client.connect().then()
 } */
 function uploadFile(fileName, file) {
     return new Promise((resolve, reject) => {
-        fs.writeFile(`/mnt/data/images/${fileName}`, file, () => {
+        fs.writeFile(`/mnt/data/images/${fileName}`, file, (err) => {
+            if (err) reject(err);
             resolve()
         })
     })
