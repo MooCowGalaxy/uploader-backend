@@ -70,7 +70,7 @@ app.get('/:id', async (req, res) => {
     let fileId = fileName.split('.').slice(0, -1).join(".")
     let extension = fileName.split('.').slice(-1)
 
-    let result = await client.json.get(`image-id-${fileId}`)
+    let result = await client.json.get(`image-${fileId}`)
     if (result === null) return res.status(404).send("File not found")
 
     res.header("Access-Control-Allow-Origin", "*")
