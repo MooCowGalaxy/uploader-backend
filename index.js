@@ -1,8 +1,7 @@
 const express = require('express')
 const sizeOfImage = require('image-size')
 const path = require('path')
-const upload = require('multer')();
-const redis = require('redis')
+const upload = require('multer')()
 const mysql = require('mysql2')
 const ejs = require('ejs')
 const fs = require('fs')
@@ -14,9 +13,6 @@ const app = express()
 app.use(express.json())
 app.use('/static', express.static('static'))
 app.use('/dist', express.static('dist'))
-
-const client = redis.createClient()
-client.connect().then()
 
 const userCache = {} // {userId: {data: RowResult, lastUpdated: Date.now()}}
 
@@ -89,12 +85,11 @@ async function resolvePlaceholders(text = "", user = {}, image = {}) {
     newText = newText.replaceAll('[filesize]', humanReadableBytes(image.size))
     newText = newText.replaceAll('[name]', `${image.fileId}.${image.extension}`)
     if (newText.includes("[dimensions]")) {
-        if (!image.dimensions) {
-            image.dimensions = sizeOfImage(`${config.savePath}/${image.fileId}.${image.extension}`)
-            await client.json.set(`image-${image.fileId}`, '$', image)
-            await client.json.set(`image-id-${image.id}`, '$', image)
+        if (image.width === null) {
+            let dimensions = sizeOfImage(`${config.savePath}/${image.fileId}.${image.extension}`)
+            await query(`UPDATE images SET width = ?, height = ? WHERE fileId = ?`, [dimensions.width, dimensions.height, image.fileId])
         }
-        newText = newText.replaceAll('[dimensions]', `${image.dimensions.width} x ${image.dimensions.height}`)
+        newText = newText.replaceAll('[dimensions]', `${image.width} x ${image.height}`)
     }
     return newText
 }
@@ -123,10 +118,8 @@ app.post('/api/upload', upload.single('sharex'), async (req, res) => {
     await uploadFile(fileName, file.buffer)
 
     let url = `https://${user.domain}/${fileName}`
-    let count = await client.get('image-counter')
-    count++;
+    let dimensions = ['png', 'jpg', 'gif'].includes(extension[0]) ? sizeOfImage(file.buffer) : {width: 0, height: 0}
     let data = {
-        id: count,
         fileId,
         extension,
         originalName: file.originalname,
@@ -134,12 +127,14 @@ app.post('/api/upload', upload.single('sharex'), async (req, res) => {
         timestamp: Date.now(),
         viewCount: 0,
         ownerId: user.id,
-        dimensions: ['png', 'jpg', 'gif'].includes(extension[0]) ? sizeOfImage(file.buffer) : {width: 0, height: 0}
+        width: dimensions.width,
+        height: dimensions.height
     }
 
-    await client.json.set(`image-${fileId}`, '$', data)
-    await client.json.set(`image-id-${count}`, '$', data)
-    await client.incr('image-counter')
+    await query(
+        `INSERT INTO images (fileId, originalName, size, timestamp, extension, ownerId, width, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [data.fileId, data.originalName, data.size, data.timestamp, data.extension, data.ownerId, data.width, data.height]
+    )
 
     res.json({error: false, message: "Uploaded!", url: url})
 })
@@ -147,19 +142,17 @@ app.get('/:id', async (req, res) => {
     let fileName = req.params.id;
     let fileId = fileName.split('.').slice(0, -1).join(".")
 
-    let result = await client.json.get(`image-${fileId}`)
-    if (result === null) return res.status(404).send(await renderFile('notFound'))
+    let results = await query(`SELECT * FROM images WHERE fileId = ?`, [fileId])
+    if (results.length === 0) return res.status(404).send(await renderFile('notFound'))
+    let result = results[0]
     if (!(['png', 'jpg', 'gif'].includes(`${result.extension}`))) {
         return res.sendFile(path.resolve(`${config.savePath}/${fileName}`))
     }
-    if (!result.viewCount) result.viewCount = 0
-    result.viewCount++
-    if (!result.dimensions) {
-        result.dimensions = sizeOfImage(`${config.savePath}/${result.fileId}.${result.extension}`)
+    if (result.width === null) {
+        let dimensions = sizeOfImage(`${config.savePath}/${result.fileId}.${result.extension}`)
+        await query(`UPDATE images SET width = ?, height = ? WHERE fileId = ?`, [dimensions.width, dimensions.height, result.fileId])
     }
-
-    await client.json.set(`image-${fileId}`, '$', result)
-    await client.json.set(`image-${result.id}`, '$', result)
+    await query(`UPDATE images SET viewCount = viewCount + 1 WHERE fileId = ?`, [result.fileId])
 
     res.header("Access-Control-Allow-Origin", "*")
 
@@ -176,8 +169,9 @@ app.get('/:id', async (req, res) => {
     } else {
         user = user.data
     }
+    if (!user.settings.embed) user.settings.embed = {}
     let embedSettings = {}
-    for (let entry of Object.entries(user.settings.embed ? user.settings.embed : {})) {
+    for (let entry of Object.entries(user.settings.embed)) {
         embedSettings[entry[0]] = await resolvePlaceholders(entry[1], user, result)
     }
 
@@ -194,8 +188,8 @@ app.get('/raw/:id', async (req, res) => {
     let fileName = req.params.id
     let fileId = fileName.split('.').slice(0, -1).join(".")
 
-    let result = await client.json.get(`image-${fileId}`)
-    if (result === null) return res.status(404).send(await renderFile('notFound'))
+    let results = await query(`SELECT * FROM images WHERE fileId = ?`, [fileId])
+    if (results.length === 0) return res.status(404).send(await renderFile('notFound'))
 
     res.header("Access-Control-Allow-Origin", "*")
     try {
