@@ -1,0 +1,24 @@
+<html lang="en-US">
+<head>
+    <title><%= `${image.fileId}.${image.extension} - ${humanReadableSize} - mooi.ng` %></title>
+    <%- include('models/header.ejs', {image: true, imageData: image, user, embedSettings}) %>
+    <script>
+        const creationTime = <%= image.timestamp %>;
+        $(document).ready(() => {
+            $('#time').html(`${new Date(creationTime).toLocaleString()} <span class="text-sm lg:text-md">(local)</span>`);
+        });
+    </script>
+</head>
+<body class="bg-stone-800">
+<div class="flex justify-center m-5">
+    <div class="w-100 p-5 pb-3 bg-stone-700 rounded-lg">
+        <h1 class="text-center text-2xl md:text-3xl lg:text-4xl text-white mb-4"><%= `${image.fileId}.${image.extension}` %></h1>
+        <img src="/raw/<%= `${image.fileId}.${image.extension}` %>" alt="" class="rounded-lg mb-4 mx-auto">
+        <p class="text-center text-md lg:text-lg text-white font-light mb-1">Uploaded by <b style="color: <%= user.settings.color ? user.settings.color : '#fff' %>"><%= user.username %></b> at <b id="time" class="text-amber-200 font-normal"><%= new Date(image.timestamp).toUTCString() %></b></p>
+        <p class="text-center text-sm lg:text-md mb-3 text-white font-light">Dimensions: <b class="text-lime-200 font-normal"><%= `${image.dimensions.width} x ${image.dimensions.height}` %></b> | Size: <b class="text-lime-200 font-normal"><%= `${humanReadableSize}` %></b> | Viewed <b class="text-lime-200 font-normal"><%= image.viewCount %></b> time<%= image.viewCount === 1 ? '' : 's' %></p>
+        <hr class="border-gray-500 mb-3">
+        <p class="text-center text-sm lg:text-md text-white font-extralight"><a href="/" class="text-sky-500 underline hover:text-sky-600">mooi.ng</a> private image host</p>
+    </div>
+</div>
+</body>
+</html>

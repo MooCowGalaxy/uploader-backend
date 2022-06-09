@@ -1,0 +1,10 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+    font-family: 'Nunito', sans-serif;
+}
+img {
+    max-width: 768px;
+}

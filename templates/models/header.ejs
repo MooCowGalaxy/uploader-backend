@@ -1,0 +1,19 @@
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no"/>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="/dist/output.css" type="text/css">
+<% if (image) { %>
+    <meta name="twitter:card" content="summary_large_image">
+    <meta property="og:image" content="<%= `/raw/${imageData.fileId}.${imageData.extension}` %>">
+    <link type="application/json+oembed" href="/api/embed">
+    <meta name="theme-color" content="<%= user.settings.color ? user.settings.color : '#000000' %>">
+    <meta property="og:site_name" content="<%= embedSettings.siteName %>">
+    <meta property="og:provider_url" content="https://google.com">
+    <meta property="og:author_name" content="moocowgalaxy">
+    <meta property="og:author_url" content="https://mooi.ng/">
+    <meta name="og:title" content="<%= embedSettings.title %>">
+    <meta name="og:description" content="<%= embedSettings.description %>">
+<% } %>

@@ -1,4 +1,4 @@
 # Project exclude paths
 /node_modules/
 config.json
-.idea
+/dist/output.css
