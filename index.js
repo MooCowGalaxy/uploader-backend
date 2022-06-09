@@ -134,7 +134,7 @@ app.post('/api/upload', upload.single('sharex'), async (req, res) => {
         timestamp: Date.now(),
         viewCount: 0,
         ownerId: user.id,
-        dimensions: ['png', 'jpg', 'gif'].includes(extension) ? sizeOfImage(file.buffer) : {width: 0, height: 0}
+        dimensions: ['png', 'jpg', 'gif'].includes(extension[0]) ? sizeOfImage(file.buffer) : {width: 0, height: 0}
     }
 
     await client.json.set(`image-${fileId}`, '$', data)
