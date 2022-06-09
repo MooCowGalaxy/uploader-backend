@@ -133,7 +133,7 @@ app.post('/api/upload', upload.single('sharex'), async (req, res) => {
         timestamp: Date.now(),
         viewCount: 0,
         ownerId: user.id,
-        dimensions: sizeOfImage(file.buffer)
+        dimensions: ['png', 'jpg', 'gif'].includes(extension) ? sizeOfImage(file.buffer) : {width: 0, height: 0}
     }
 
     await client.json.set(`image-${fileId}`, '$', data)
@@ -148,8 +148,8 @@ app.get('/:id', async (req, res) => {
 
     let result = await client.json.get(`image-${fileId}`)
     if (result === null) return res.status(404).send(await renderFile('notFound'))
-    if (!(['png', 'jpg', 'mp4', 'gif'].includes(`${result.extension}`))) {
-        return res.redirect(`/raw/${fileName}`)
+    if (!(['png', 'jpg', 'gif'].includes(`${result.extension}`))) {
+        return res.sendFile(path.resolve(`${config.savePath}/${fileName}`))
     }
     if (!result.viewCount) result.viewCount = 0
     result.viewCount++
