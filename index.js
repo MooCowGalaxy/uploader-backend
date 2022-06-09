@@ -87,6 +87,7 @@ async function resolvePlaceholders(text = "", user = {}, image = {}) {
     newText = newText.replaceAll('[date]', new Date(image.timestamp).toUTCString().split(' ').slice(0, 4).join(' '))
     newText = newText.replaceAll('[datetime]', new Date(image.timestamp).toUTCString())
     newText = newText.replaceAll('[filesize]', humanReadableBytes(image.size))
+    newText = newText.replaceAll('[name]', `${image.fileId}.${image.extension}`)
     if (newText.includes("[dimensions]")) {
         if (!image.dimensions) {
             image.dimensions = sizeOfImage(`${config.savePath}/${image.fileId}.${image.extension}`)
