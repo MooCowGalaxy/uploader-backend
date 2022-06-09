@@ -153,6 +153,7 @@ app.get('/:id', async (req, res) => {
         await query(`UPDATE images SET width = ?, height = ? WHERE fileId = ?`, [dimensions.width, dimensions.height, result.fileId])
     }
     await query(`UPDATE images SET viewCount = viewCount + 1 WHERE fileId = ?`, [result.fileId])
+    result.viewCount++;
 
     res.header("Access-Control-Allow-Origin", "*")
 
