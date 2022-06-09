@@ -32,12 +32,12 @@ function query(statement, placeholders = []) {
 }
 
 /* function uploadFile(fileName, file) {
-    return new Promise(((resolve, reject) => {
+    return new Promise((resolve, reject) => {
         minio.putObject(config.minioBucket, fileName, file, function(err) {
             if (err) reject(err)
             resolve()
         })
-    }))
+    })
 } */
 function uploadFile(fileName, file) {
     return new Promise((resolve, reject) => {

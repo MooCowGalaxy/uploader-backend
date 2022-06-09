@@ -8,3 +8,9 @@
 img {
     max-width: 768px;
 }
+.bg-main {
+    background-color: rgb(48, 52, 54);
+}
+body {
+    background-color: rgb(29, 31, 33);
+}
