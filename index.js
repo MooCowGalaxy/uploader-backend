@@ -1,18 +1,18 @@
 const express = require('express')
+const oauth = require('./util/discordAuth')
+const {renderFile, humanReadableBytes} = require('./util/functions')
 const sizeOfImage = require('image-size')
 const path = require('path')
 const upload = require('multer')()
 const mysql = require('mysql2')
-const ejs = require('ejs')
 const fs = require('fs')
 
 const config = require('./config.json')
 
 const app = express()
-
-app.use(express.json())
-app.use('/static', express.static('static'))
-app.use('/dist', express.static('dist'))
+let totalBytes = 0
+let totalFiles = 0
+// SELECT SUM(size) AS total FROM images;
 
 const userCache = {} // {userId: {data: RowResult, lastUpdated: Date.now()}}
 
@@ -31,6 +31,11 @@ function query(statement, placeholders = []) {
     })
 }
 
+app.use(express.json())
+app.use('/static', express.static('static'))
+app.use('/dist', express.static('dist'))
+app.use('/auth', oauth(pool))
+
 /* function uploadFile(fileName, file) {
     return new Promise((resolve, reject) => {
         minio.putObject(config.minioBucket, fileName, file, function(err) {
@@ -46,28 +51,6 @@ function uploadFile(fileName, file) {
             resolve()
         })
     })
-}
-function renderFile(filename, data = {}) {
-    return new Promise((resolve, reject) => {
-        filename = `templates/${filename}.ejs`
-        ejs.renderFile(filename, data, {}, function (err, str) {
-            if (err) { reject(err); return }
-            resolve(str)
-        })
-    })
-}
-
-function humanReadableBytes(bytes = 0) {
-    if (bytes >= 1000 * 1000 * 1000) {
-        return `${Math.round(bytes / (1000 * 1000 * 10)) / 100} GB`
-    }
-    if (bytes >= 1000 * 1000) {
-        return `${Math.round(bytes / (1000 * 10)) / 100} MB`
-    } else if (bytes >= 1000) {
-        return `${Math.round(bytes / 10) / 100} KB`
-    } else {
-        return `${bytes} B`
-    }
 }
 
 function createTokenString(length = 6) {
@@ -94,8 +77,21 @@ async function resolvePlaceholders(text = "", user = {}, image = {}) {
     return newText
 }
 
+app.get('/', async (req, res) => {
+    res.send(await renderFile('index'))
+})
+app.get('/dashboard', async (req, res) => {
+    res.send(await renderFile('dashboard'))
+})
+
 app.get('/api/embed', async (req, res) => {
     res.send({type: 'link', version: '1.0'})
+})
+app.get('/api/stats', async (req, res) => {
+    res.json({
+        dataUsed: humanReadableBytes(totalBytes),
+        fileCount: totalFiles
+    })
 })
 app.post('/api/upload', upload.single('sharex'), async (req, res) => {
     let key = req.header("key")
@@ -117,7 +113,7 @@ app.post('/api/upload', upload.single('sharex'), async (req, res) => {
     let fileName = `${fileId}.${extension}`
     await uploadFile(fileName, file.buffer)
 
-    let url = `https://${user.domain}/${fileName}`
+    let url = `https://${user.domain}/i/${fileName}`
     let dimensions = ['png', 'jpg', 'gif'].includes(extension[0]) ? sizeOfImage(file.buffer) : {width: 0, height: 0}
     let data = {
         fileId,
@@ -135,10 +131,12 @@ app.post('/api/upload', upload.single('sharex'), async (req, res) => {
         `INSERT INTO images (fileId, originalName, size, timestamp, extension, ownerId, width, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
         [data.fileId, data.originalName, data.size, data.timestamp, data.extension, data.ownerId, data.width, data.height]
     )
+    totalFiles++;
+    totalBytes += data.size
 
     res.json({error: false, message: "Uploaded!", url: url})
 })
-app.get('/:id', async (req, res) => {
+app.get('/i/:id', async (req, res) => {
     let fileName = req.params.id;
     let fileId = fileName.split('.').slice(0, -1).join(".")
 
@@ -205,4 +203,10 @@ app.get('/', async (req, res) => {
 
 app.listen(config.port, () => {
     console.log(`Image server running at port ${config.port}.`)
+    query(`SELECT SUM(size) AS total FROM images`).then(r => {
+        totalBytes += r[0].total
+    })
+    query(`SELECT COUNT(*) AS total FROM images`).then(r => {
+        totalFiles += r[0].total
+    })
 })
