@@ -45,8 +45,14 @@ img {
 .custom-shape-divider-2 .shape-fill {
     fill: #003D7A;
 }
+.spacer.r16 {
+    height: 64px;
+}
 .spacer.p200 {
     height: 200px;
+}
+.spacer.p300 {
+    height: 300px;
 }
 .transition-on-load {
     opacity: 0;
@@ -118,6 +124,24 @@ span.bg-text-gradient-title {
     background-color: #85FFBD;
     background-image: linear-gradient(45deg, #85FFBD 0%, #FFFB7D 100%);
 }
+#stats > div {
+    background-color: rgba(76, 29, 149, 0.65);
+    border-radius: 0.5rem;
+    padding: 1rem 1.5rem;
+}
+#stats > div > h1 {
+    color: white;
+    font-weight: bold;
+    font-size: 1.5rem;
+    line-height: 2rem;
+    text-align: center;
+}
+#stats > div > p {
+    color: rgb(156, 163, 175);
+    font-size: 1rem;
+    line-height: 1.5rem;
+    text-align: center;
+}
 #feature-list > div {
     background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 100%);
     border-radius: 0.5rem;
@@ -137,6 +161,18 @@ span.bg-text-gradient-title {
     color: rgb(156 163 175);
     font-size: 1rem;
     line-height: 1.5rem;
+}
+#navbar-dropdown:focus > #navbar-dropdown-icon {
+    display: none;
+}
+#navbar-dropdown:not(:focus) > #navbar-dropdown-icon-focus {
+    display: none;
+}
+#navbar-dropdown:focus + div {
+    display: block;
+}
+#navbar-dropdown + div:hover {
+    display: block;
 }
 body {
     background-color: rgb(29, 31, 33);

@@ -8,28 +8,21 @@ const mysql = require('mysql2')
 const fs = require('fs')
 
 const config = require('./config.json')
+config.database.supportBigNumbers = true // support discord IDs
+config.database.bigNumberStrings = true // convert BIGINT types to string
 
 const app = express()
 let totalBytes = 0
 let totalFiles = 0
+let totalUsers = 0
 // SELECT SUM(size) AS total FROM images;
 
 const userCache = {} // {userId: {data: RowResult, lastUpdated: Date.now()}}
 
 const pool = mysql.createPool(config.database)
 
-function query(statement, placeholders = []) {
-    return new Promise((resolve, reject) => {
-        pool.getConnection((err, connection) => {
-            if (err) { reject(err); return }
-            connection.query(statement, placeholders, (err, results) => {
-                connection.release()
-                if (err) { reject(err); return }
-                resolve(results)
-            })
-        })
-    })
-}
+const {query} = require('./util/database')(pool)
+const {getUser} = require('./util/authFunctions')(pool)
 
 app.use(express.json())
 app.use('/static', express.static('static'))
@@ -81,16 +74,24 @@ app.get('/', async (req, res) => {
     res.send(await renderFile('index'))
 })
 app.get('/dashboard', async (req, res) => {
-    res.send(await renderFile('dashboard'))
+    const user = await getUser(req)
+    if (!user) return res.redirect('/auth/login')
+    res.send(await renderFile('dashboard', {user: user.data}))
 })
 
 app.get('/api/embed', async (req, res) => {
     res.send({type: 'link', version: '1.0'})
 })
+app.get('/api/user', async (req, res) => {
+    const user = await getUser(req)
+    if (!user) return res.status(401).send({success: false, error: 'Unauthorized'})
+    res.send({success: true, data: user.data})
+})
 app.get('/api/stats', async (req, res) => {
     res.json({
         dataUsed: humanReadableBytes(totalBytes),
-        fileCount: totalFiles
+        fileCount: totalFiles,
+        userCount: totalUsers
     })
 })
 app.post('/api/upload', upload.single('sharex'), async (req, res) => {
@@ -132,7 +133,7 @@ app.post('/api/upload', upload.single('sharex'), async (req, res) => {
         [data.fileId, data.originalName, data.size, data.timestamp, data.extension, data.ownerId, data.width, data.height]
     )
     totalFiles++;
-    totalBytes += data.size
+    totalBytes += data.size;
 
     res.json({error: false, message: "Uploaded!", url: url})
 })
@@ -197,16 +198,20 @@ app.get('/raw/:id', async (req, res) => {
         res.send(await renderFile('notFound'))
     }
 })
-app.get('/', async (req, res) => {
-    res.send("your mom")
+app.use((err, req, res, next) => {
+    console.error(err.stack)
+    res.status(500).send('Internal Server Error')
 })
 
 app.listen(config.port, () => {
     console.log(`Image server running at port ${config.port}.`)
     query(`SELECT SUM(size) AS total FROM images`).then(r => {
-        totalBytes += r[0].total
+        totalBytes += parseInt(r[0].total)
     })
     query(`SELECT COUNT(*) AS total FROM images`).then(r => {
-        totalFiles += r[0].total
+        totalFiles += parseInt(r[0].total)
+    })
+    query(`SELECT COUNT(*) AS total FROM users`).then(r => {
+        totalUsers += parseInt(r[0].total)
     })
 })

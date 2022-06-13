@@ -2,6 +2,7 @@
 <head>
     <title>mooi.ng - a private image host</title>
     <%- include('models/header.ejs', {image: false}) %>
+    <script src="/static/js/index.js"></script>
 </head>
 <body class="min-h-screen">
 <%- include('models/navbar.ejs') %>
@@ -57,5 +58,24 @@
         </svg>
     </div>
 </section>
+<div class="spacer p300"></div>
+<div class="container max-w-8xl mx-auto">
+    <p class="text-center font-bold text-white mb-5 text-3xl sm:text-4xl transition-on-load">Stats</p>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mx-3" id="stats">
+        <div class="transition-on-load">
+            <h1>Users</h1>
+            <p id="users" class="animate-pulse bg-violet-900 h-2 rounded mt-2"></p>
+        </div>
+        <div class="transition-on-load">
+            <h1>Uploads</h1>
+            <p id="uploads" class="animate-pulse bg-violet-900 h-2 rounded mt-2"></p>
+        </div>
+        <div class="transition-on-load">
+            <h1>Storage used</h1>
+            <p id="storage" class="animate-pulse bg-violet-900 h-2 rounded mt-2"></p>
+        </div>
+    </div>
+</div>
+<div class="spacer p200"></div>
 </body>
 </html>

@@ -38,5 +38,13 @@ module.exports = {
             cookieDict[current.split('=')[0]] = current.split('=').splice(1).join('=')
         }
         return cookieDict
+    },
+    createTokenString() {
+        let base62 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890".split('')
+        let token = ""
+        for (let i = 0; i < 21; i++) {
+            token = `${token}${base62[Math.floor(Math.random() * base62.length)]}`
+        }
+        return token
     }
 }
