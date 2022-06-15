@@ -11,8 +11,8 @@ const config = require('./config.json')
 const app = express()
 
 app.use(express.json())
-app.use('/static', express.static('static'))
-app.use('/dist', express.static('dist'))
+app.use('/static', express.static(path.resolve('./static')))
+app.use('/dist', express.static(path.resolve('./dist')))
 
 const userCache = {} // {userId: {data: RowResult, lastUpdated: Date.now()}}
 
