@@ -1,4 +1,4 @@
-const {getCookie} = require('./functions');
+const {getCookie, createTokenString} = require('./functions');
 const discordOauth2 = require("discord-oauth2");
 const config = require("../config.json");
 
@@ -41,7 +41,15 @@ module.exports = (pool) => {
             u.cache = JSON.stringify(data)
             u.lastUpdated = Math.floor(Date.now() / 1000)
         }
-        return {userId: u.user_id, data: JSON.parse(u.cache)}
+        let cache = JSON.parse(u.cache)
+        let userData;
+        let result = await query(`SELECT * FROM users WHERE discord = ?`, [u.user_id])
+        if (result.length > 0) {
+            userData = result[0]
+        } else {
+            await query(`INSERT INTO users (username, discord, api_key) VALUES (?, ?, ?)`, [`${cache.username}#${cache.discriminator}`, cache.id, createTokenString()])
+        }
+        return {userId: u.user_id, data: cache, user: userData}
     }
 
     function generateURL() {
@@ -53,11 +61,13 @@ module.exports = (pool) => {
 
     async function getBearerToken(code) {
         try {
-            return await oauth.tokenRequest({
+            let data = await oauth.tokenRequest({
                 code,
                 grantType: "authorization_code",
                 scope: "identify"
             })
+            // console.log(data)
+            return data
         } catch {
             return null
         }

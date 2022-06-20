@@ -1,9 +1,11 @@
 const express = require('express')
 const oauth = require('./util/discordAuth')
 const {renderFile, humanReadableBytes} = require('./util/functions')
+const {setupCache, addCacheFile, getCacheFile} = require('./util/cacher')
+const {uploadFile, downloadFile, deleteFile} = require('./util/storage')
 const sizeOfImage = require('image-size')
 const path = require('path')
-const upload = require('multer')()
+const nodeSchedule = require('node-schedule')
 const mysql = require('mysql2')
 const fs = require('fs')
 
@@ -12,12 +14,14 @@ config.database.supportBigNumbers = true // support discord IDs
 config.database.bigNumberStrings = true // convert BIGINT types to string
 
 const app = express()
-let totalBytes = 0
-let totalFiles = 0
-let totalUsers = 0
+global.totalBytes = 0
+global.totalFiles = 0
+global.totalUsers = 0
 // SELECT SUM(size) AS total FROM images;
 
-const userCache = {} // {userId: {data: RowResult, lastUpdated: Date.now()}}
+global.userCache = {} // {userId: {data: RowResult, lastUpdated: Date.now()}}
+const storageType = config.storageType
+if (storageType === 'minio') setupCache().then(() => console.log('Cache set up successfully.'))
 
 const pool = mysql.createPool(config.database)
 
@@ -29,30 +33,31 @@ app.use('/static', express.static('static'))
 app.use('/dist', express.static('dist'))
 app.use('/auth', oauth(pool))
 
-/* function uploadFile(fileName, file) {
-    return new Promise((resolve, reject) => {
-        minio.putObject(config.minioBucket, fileName, file, function(err) {
-            if (err) reject(err)
-            resolve()
-        })
-    })
-} */
-function uploadFile(fileName, file) {
-    return new Promise((resolve, reject) => {
-        fs.writeFile(`${config.savePath}/${fileName}`, file, (err) => {
-            if (err) reject(err);
-            resolve()
-        })
-    })
-}
+process.on('unhandledRejection', reason => {
+    console.error(`Unhandled rejection: ${reason}`)
+    console.error(reason.stack)
+})
 
-function createTokenString(length = 6) {
-    let base62 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890".split('')
-    let token = ""
-    for (let i = 0; i < length; i++) {
-        token = `${token}${base62[Math.floor(Math.random() * base62.length)]}`
+const uploadQueue = []
+
+// TODO: implement upload queue
+
+async function saveFile(fileName, buffer) {
+    await uploadFile(fileName, buffer)
+    if (storageType === 'minio') await addCacheFile(fileName, buffer)
+}
+async function getFile(fileName) {
+    if (storageType === 'minio') {
+        let buffer = await getCacheFile(fileName)
+        if (buffer === null) {
+            buffer = await downloadFile(fileName)
+            if (buffer === null) return null;
+            await addCacheFile(fileName, buffer)
+            return buffer
+        } else return buffer
+    } else {
+        return await downloadFile(fileName)
     }
-    return token
 }
 async function resolvePlaceholders(text = "", user = {}, image = {}) {
     let newText = text
@@ -62,156 +67,76 @@ async function resolvePlaceholders(text = "", user = {}, image = {}) {
     newText = newText.replaceAll('[name]', `${image.fileId}.${image.extension}`)
     if (newText.includes("[dimensions]")) {
         if (image.width === null) {
-            let dimensions = sizeOfImage(`${config.savePath}/${image.fileId}.${image.extension}`)
+            let dimensions = sizeOfImage(`${config.cachePath}/${image.fileId}.${image.extension}`)
             await query(`UPDATE images SET width = ?, height = ? WHERE fileId = ?`, [dimensions.width, dimensions.height, image.fileId])
         }
         newText = newText.replaceAll('[dimensions]', `${image.width} x ${image.height}`)
     }
     return newText
 }
+function checkForDomain(req, res, next) {
+    if (req.hostname !== 'mooi.ng' && config.production) return res.redirect('https://mooi.ng/')
+    next()
+}
 
-app.get('/', async (req, res) => {
-    res.send(await renderFile('index'))
-})
-app.get('/dashboard', async (req, res) => {
-    const user = await getUser(req)
-    if (!user) return res.redirect('/auth/login')
-    res.send(await renderFile('dashboard', {user: user.data}))
-})
+const options = {
+    checkForDomain,
+    getUser,
+    query,
+    saveFile,
+    resolvePlaceholders,
+}
 
-app.get('/api/embed', async (req, res) => {
-    res.send({type: 'link', version: '1.0'})
-})
-app.get('/api/user', async (req, res) => {
-    const user = await getUser(req)
-    if (!user) return res.status(401).send({success: false, error: 'Unauthorized'})
-    res.send({success: true, data: user.data})
-})
-app.get('/api/stats', async (req, res) => {
-    res.json({
-        dataUsed: humanReadableBytes(totalBytes),
-        fileCount: totalFiles,
-        userCount: totalUsers
-    })
-})
-app.post('/api/upload', upload.single('sharex'), async (req, res) => {
-    let key = req.header("key")
-    let file = req.file;
+let middlewareCount = 0
+let routeCount = 0
+let taskCount = 0
 
-    let results = await query('SELECT * FROM users WHERE api_key = ?', [key])
-    if (results.length === 0) return res.json({error: true, message: "Invalid key"})
-    let user = results[0]
-    user.settings = JSON.parse(user.settings)
-    userCache[user.id] = {
-        data: user,
-        lastUpdated: Date.now()
+let beforeMiddleware = []
+let afterMiddleware = []
+
+for (let file of fs.readdirSync('./middleware')) {
+    let middleware = require(`./middleware/${file}`)
+    if (middleware.type === 0) { // beforeMiddleware
+        beforeMiddleware.push(middleware.middleware)
+    } else if (middleware.type === 1) {
+        afterMiddleware.push(middleware.middleware)
     }
+    middlewareCount++
+}
 
-    if (file.fieldname !== "sharex") return res.json({error: true, message: "Invalid file"})
+for (let middleware of beforeMiddleware) {
+    app.use(middleware)
+}
 
-    let extension = file.originalname.split('.').slice(-1)
-    let fileId = createTokenString(7)
-    let fileName = `${fileId}.${extension}`
-    await uploadFile(fileName, file.buffer)
+for (let file of fs.readdirSync('./routes')) {
+    const route = require(`./routes/${file}`)
+    const router = route.getRouter(options)
 
-    let url = `https://${user.domain}/i/${fileName}`
-    let dimensions = ['png', 'jpg', 'gif'].includes(extension[0]) ? sizeOfImage(file.buffer) : {width: 0, height: 0}
-    let data = {
-        fileId,
-        extension,
-        originalName: file.originalname,
-        size: file.size,
-        timestamp: Date.now(),
-        viewCount: 0,
-        ownerId: user.id,
-        width: dimensions.width,
-        height: dimensions.height
-    }
+    app.use(route.namespace, router)
+    routeCount++
+}
 
-    await query(
-        `INSERT INTO images (fileId, originalName, size, timestamp, extension, ownerId, width, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        [data.fileId, data.originalName, data.size, data.timestamp, data.extension, data.ownerId, data.width, data.height]
-    )
-    totalFiles++;
-    totalBytes += data.size;
+for (let middleware of afterMiddleware) {
+    app.use(middleware)
+}
 
-    res.json({error: false, message: "Uploaded!", url: url})
-})
-app.get('/i/:id', async (req, res) => {
-    let fileName = req.params.id;
-    let fileId = fileName.split('.').slice(0, -1).join(".")
+for (let file of fs.readdirSync('./tasks')) {
+    const task = require(`./tasks/${file}`)(query)
+    nodeSchedule.scheduleJob(task.time, task.task)
+    taskCount++
+}
 
-    let results = await query(`SELECT * FROM images WHERE fileId = ?`, [fileId])
-    if (results.length === 0) return res.status(404).send(await renderFile('notFound'))
-    let result = results[0]
-    if (!(['png', 'jpg', 'gif'].includes(`${result.extension}`))) {
-        return res.sendFile(path.resolve(`${config.savePath}/${fileName}`))
-    }
-    if (result.width === null) {
-        let dimensions = sizeOfImage(`${config.savePath}/${result.fileId}.${result.extension}`)
-        await query(`UPDATE images SET width = ?, height = ? WHERE fileId = ?`, [dimensions.width, dimensions.height, result.fileId])
-    }
-    await query(`UPDATE images SET viewCount = viewCount + 1 WHERE fileId = ?`, [result.fileId])
-    result.viewCount++;
-
-    res.header("Access-Control-Allow-Origin", "*")
-
-    let user = userCache[result.ownerId]
-    if (!user || user.lastUpdated < (Date.now() - 1000 * 60 * 5)) {
-        let results = await query(`SELECT * FROM users WHERE id = ?`, [result.ownerId])
-        if (results.length === 0) return res.status(404).send(await renderFile('notFound'))
-        user = results[0]
-        user.settings = JSON.parse(user.settings)
-        userCache[user.id] = {
-            data: user,
-            lastUpdated: Date.now()
-        }
-    } else {
-        user = user.data
-    }
-    if (!user.settings.embed) user.settings.embed = {}
-    let embedSettings = {}
-    for (let entry of Object.entries(user.settings.embed)) {
-        embedSettings[entry[0]] = await resolvePlaceholders(entry[1], user, result)
-    }
-
-    let data = {
-        user,
-        image: result,
-        humanReadableSize: humanReadableBytes(result.size),
-        embedSettings
-    }
-
-    res.send(await renderFile('image', data))
-})
-app.get('/raw/:id', async (req, res) => {
-    let fileName = req.params.id
-    let fileId = fileName.split('.').slice(0, -1).join(".")
-
-    let results = await query(`SELECT * FROM images WHERE fileId = ?`, [fileId])
-    if (results.length === 0) return res.status(404).send(await renderFile('notFound'))
-
-    res.header("Access-Control-Allow-Origin", "*")
-    try {
-        res.sendFile(path.resolve(`${config.savePath}/${fileName}`))
-    } catch (e) {
-        res.send(await renderFile('notFound'))
-    }
-})
-app.use((err, req, res, next) => {
-    console.error(err.stack)
-    res.status(500).send('Internal Server Error')
-})
+console.log(`Loaded ${middlewareCount} middleware functions, ${routeCount} routes and ${taskCount} tasks.`)
 
 app.listen(config.port, () => {
     console.log(`Image server running at port ${config.port}.`)
     query(`SELECT SUM(size) AS total FROM images`).then(r => {
-        totalBytes += parseInt(r[0].total)
+        global.totalBytes += parseInt(r[0].total)
     })
     query(`SELECT COUNT(*) AS total FROM images`).then(r => {
-        totalFiles += parseInt(r[0].total)
+        global.totalFiles += parseInt(r[0].total)
     })
     query(`SELECT COUNT(*) AS total FROM users`).then(r => {
-        totalUsers += parseInt(r[0].total)
+        global.totalUsers += parseInt(r[0].total)
     })
 })

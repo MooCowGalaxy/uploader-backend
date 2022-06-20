@@ -39,10 +39,10 @@ module.exports = {
         }
         return cookieDict
     },
-    createTokenString() {
+    createTokenString(num = 21) {
         let base62 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890".split('')
         let token = ""
-        for (let i = 0; i < 21; i++) {
+        for (let i = 0; i < num; i++) {
             token = `${token}${base62[Math.floor(Math.random() * base62.length)]}`
         }
         return token

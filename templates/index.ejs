@@ -11,7 +11,7 @@
         <p class="font-bold text-white mb-2">
             <b class="text-4xl sm:text-5xl md:text-6xl lg:text-7xl"><span class="gradient bg-text-gradient-logo">mooing</span></b>
         </p>
-        <p class="font-normal text-white">
+        <p class="font-normal theme-color">
             <b class="text-2xl sm:text-3xl">A modern ShareX image host.</b>
         </p>
     </section>
@@ -51,31 +51,33 @@
         </div>
     </section>
 </div>
-<section class="relative">
-    <div class="custom-shape-divider-2">
-        <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
-            <path d="M985.66,92.83C906.67,72,823.78,31,743.84,14.19c-82.26-17.34-168.06-16.33-250.45.39-57.84,11.73-114,31.07-172,41.86A600.21,600.21,0,0,1,0,27.35V120H1200V95.8C1132.19,118.92,1055.71,111.31,985.66,92.83Z" class="shape-fill"></path>
-        </svg>
+<div class="bg-violet-300">
+    <section class="relative">
+        <div class="custom-shape-divider-2">
+            <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
+                <path d="M985.66,92.83C906.67,72,823.78,31,743.84,14.19c-82.26-17.34-168.06-16.33-250.45.39-57.84,11.73-114,31.07-172,41.86A600.21,600.21,0,0,1,0,27.35V120H1200V95.8C1132.19,118.92,1055.71,111.31,985.66,92.83Z" class="shape-fill"></path>
+            </svg>
+        </div>
+    </section>
+    <div class="spacer p300"></div>
+    <div class="container max-w-8xl mx-auto">
+        <p class="text-center font-bold text-white mb-5 text-3xl sm:text-4xl transition-on-load">Stats</p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-0 mx-3" id="stats">
+            <div class="transition-on-load rounded-lg md:rounded-none">
+                <h1>Users</h1>
+                <p id="users" class="animate-pulse h-2 mt-2"></p>
+            </div>
+            <div class="transition-on-load rounded-lg md:rounded-none">
+                <h1>Uploads</h1>
+                <p id="uploads" class="animate-pulse h-2 mt-2"></p>
+            </div>
+            <div class="transition-on-load rounded-lg md:rounded-none">
+                <h1>Storage used</h1>
+                <p id="storage" class="animate-pulse h-2 mt-2"></p>
+            </div>
+        </div>
     </div>
-</section>
-<div class="spacer p300"></div>
-<div class="container max-w-8xl mx-auto">
-    <p class="text-center font-bold text-white mb-5 text-3xl sm:text-4xl transition-on-load">Stats</p>
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mx-3" id="stats">
-        <div class="transition-on-load">
-            <h1>Users</h1>
-            <p id="users" class="animate-pulse bg-violet-900 h-2 rounded mt-2"></p>
-        </div>
-        <div class="transition-on-load">
-            <h1>Uploads</h1>
-            <p id="uploads" class="animate-pulse bg-violet-900 h-2 rounded mt-2"></p>
-        </div>
-        <div class="transition-on-load">
-            <h1>Storage used</h1>
-            <p id="storage" class="animate-pulse bg-violet-900 h-2 rounded mt-2"></p>
-        </div>
-    </div>
+    <div class="spacer p200"></div>
 </div>
-<div class="spacer p200"></div>
 </body>
 </html>
