@@ -14,6 +14,7 @@ function getRouter({query, resolvePlaceholders}) {
 
         let fileName = req.params.id;
         if (!config.production && !fileName.includes('.')) return next();
+        if (fileName.includes('/')) return next();
         let fileId = fileName.split('.').slice(0, -1).join(".")
 
         let results = await query(`SELECT * FROM images WHERE fileId = ?`, [fileId])

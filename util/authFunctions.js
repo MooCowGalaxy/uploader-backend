@@ -47,7 +47,7 @@ module.exports = (pool) => {
         if (result.length > 0) {
             userData = result[0]
         } else {
-            await query(`INSERT INTO users (username, discord, api_key) VALUES (?, ?, ?)`, [`${cache.username}#${cache.discriminator}`, cache.id, createTokenString()])
+            await query(`INSERT INTO users (username, discord, api_key, tag) VALUES (?, ?, ?, ?)`, [`${cache.username}#${cache.discriminator}`, cache.id, createTokenString(20), `${cache.username}#${cache.discriminator}`])
         }
         return {userId: u.user_id, data: cache, user: userData}
     }

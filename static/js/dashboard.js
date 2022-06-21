@@ -1,5 +1,6 @@
 let onModalButton1Click = []
 let onModalButton2Click = []
+let isModalClosable = true
 let route = null;
 let user = null;
 
@@ -34,6 +35,7 @@ function isSmall() {
     return $('#close-sidebar').width() === 24
 }
 function openModal({title, description, iconColor, iconSVG, buttons}) {
+    isModalClosable = true
     $('#modal-title').text(title)
     $('#modal-description').text(description)
 
@@ -103,23 +105,15 @@ const routes = {
     '/settings/embed': 'r-/embed',
     '/gallery': 'p-gallery',
     '/domains': 'p-domains',
-    '/donate': 'p-donate'
+    '/donate': 'p-donate',
+    '/rules': 'p-rules'
 }
 const pages = {
     home: {
         title: 'Home',
         onLoad: () => {
-            $.ajax({
-                url: '/api/user',
-                method: 'GET',
-                error: console.error,
-                success: data => {
-                    if (data.success) {
-                        $('#page-home-self-images').html(`<p><b class="font-semibold text-lime-600">${data.user.uploadCount}</b> images uploaded</p>`)
-                        $('#page-home-self-storage').html(`<p><b class="font-semibold text-cyan-600">${data.user.bytesHuman}</b> storage used</p>`)
-                    }
-                }
-            })
+            $('#page-home-self-images').html(`<p><b class="font-semibold text-lime-600">${user.user.uploadCount}</b> images uploaded</p>`)
+            $('#page-home-self-storage').html(`<p><b class="font-semibold text-cyan-600">${user.user.bytesHuman}</b> storage used</p>`)
             $.ajax({
                 url: '/api/stats',
                 method: 'GET',
@@ -207,10 +201,10 @@ const pages = {
                                         drawOnChartArea: false
                                     }
                                 }
-                            }
-                        },
-                        responsive: true,
-                        maintainAspectRatio: false
+                            },
+                            responsive: true,
+                            maintainAspectRatio: false
+                        }
                     })
                 }
             })
@@ -247,16 +241,123 @@ const pages = {
         </div>
     </div>
 </div>
-<div class="content">
-    <canvas id="page-home-chart" class="w-full h-full"></canvas>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div class="content">
+        <h1 class="mb-2">Quickstart Guide</h1>
+        <p class="mb-2">Note: This guide is meant for users on Windows using ShareX.</p>
+        <div class="grid grid-cols-1 gap-3" id="page-home-quickstart">
+            <div class="list-item">
+                <p>1.</p>
+                <div>Download and install ShareX <a href="https://getsharex.com" class="link" target="_blank" rel="noopener noreferrer">here</a> if you don't have it installed yet.</div>
+            </div>
+            <div class="list-item">
+                <p>2.</p>
+                <div>Download your generated ShareX config <a href="/api/config/sharex" class="link" target="_blank" rel="noopener noreferrer">here</a> and open it. Click "yes" to make mooi.ng the default custom uploader.</div>
+            </div>
+            <div class="list-item">
+                <p>3.</p>
+                <div>Click on <code>After capture tasks</code> on the left and enable <code>Copy image to clipboard</code>, <code>Save image to file</code> and <code>Upload image to host</code>.</div>
+            </div>
+            <div class="list-item">
+                <p>4.</p>
+                <div>Click on <code>After upload tasks</code> on the left and enable <code>Copy URL to clipboard</code>.</div>
+            </div>
+            <div class="list-item">
+                <p>5.</p>
+                <div>Done! You can now start sharing screenshots through mooi.ng. You can also customize your mooi.ng experience by changing <a href="/dashboard/embed" class="link">embed</a> or <a href="/dashboard/domains" class="link">domain</a> settings.</div>
+            </div>
+        </div>
+    </div>
+    <div class="content">
+        <h1>Statistics</h1>
+        <div class="max-h-120">
+            <canvas id="page-home-chart" class="w-full h-full"></canvas>
+        </div>
+    </div>
 </div>
 `
     },
     user: {
-        title: 'User Settings'
+        title: 'User Settings',
+        onLoad: () => {
+            let isAPIKeyVisible = false
+            $('#page-user-api-key-view').click(() => {
+                if (isAPIKeyVisible) {
+                    $('#page-user-api-key').text('*********************')
+                    $('#page-user-api-key-view').html(`
+<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+  <path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+</svg>`)
+                } else {
+                    $('#page-user-api-key').text(user.user.apiKey)
+                    $('#page-user-api-key-view').html(`
+<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+  <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+  <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+</svg>`)
+                }
+                isAPIKeyVisible = !isAPIKeyVisible
+            })
+            $('#page-user-api-key-regenerate').click(() => {
+                onModalButton1Click = [closeModal]
+                onModalButton2Click = [() => {
+                    isModalClosable = false
+                    $('#modal-button-1').prop('disabled', true)
+                    $('#modal-button-2').prop('disabled', true)
+                    $('#modal-button-2').text('Regenerating...')
+                    $.ajax({
+                        url: '/api/user/regenerate',
+                        method: 'POST',
+                        error: console.error,
+                        success: (data) => {
+                            $('#modal-button-2').text('Regenerated')
+                            $('#modal-button-2').removeClass('bg-red-300')
+                            $('#modal-button-2').addClass('bg-green-300')
+                            setTimeout(() => {
+                                isModalClosable = true
+                                $('#modal').removeClass('visible')
+                            }, 500)
+                            user.user.apiKey = data.apiKey
+                        }
+                    })
+                }]
+                openModal({
+                    title: 'Are you sure?',
+                    description: 'If you regenerate your API key, you will need to re-download your configs. Only proceed if you know what you are doing.',
+                    iconColor: 'bg-red-100',
+                    iconSVG: `<svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+  <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+</svg>`,
+                    buttons: `<button id="modal-button-1" onclick="modalButton1Click()" class="px-3 py-2 rounded-lg font-semibold bg-slate-200 disabled:opacity-75">Close</button>
+                              <button id="modal-button-2" onclick="modalButton2Click()" class="px-3 py-2 rounded-lg bg-red-300 disabled:opacity-75">Regenerate</button>`
+                })
+            })
+        },
+        html: `
+        <div class="grid grid-cols-1 sm:grid-cols-2">
+            <div class="content">
+                <h1 class="mb-2">API Key</h1>
+                <div class="rounded border border-gray-300 px-4 py-2.5 mb-2 relative">
+                    <p id="page-user-api-key">*********************</p>
+                    <div class="absolute right-4 top-2.5">
+                        <button id="page-user-api-key-view">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div>
+                    <button class="px-3 py-1 bg-red-200 hover:bg-red-300 rounded-md float-right" id="page-user-api-key-regenerate">Regenerate</button>
+                </div>
+            </div>
+        </div>
+        `
     },
     embed: {
-        title: 'Embed Settings'
+        title: 'Embed Settings',
+        onLoad: () => {},
+        html: ``
     },
     gallery: {
         title: 'Image Gallery'
@@ -266,6 +367,23 @@ const pages = {
     },
     donate: {
         title: 'Donate'
+    },
+    rules: {
+        title: 'Rules',
+        html: `
+        <div class="content">
+            <h1>Rules</h1> 
+            <p class="mb-2">By using mooi.ng, you agree to abiding by the rules listed below. These rules are not exhaustive, and actions are ultimately up to staff discretion.</p>
+            <ol class="list-decimal ml-10 mb-2">
+                <li>Do not upload NSFW content or gore to the service.</li>
+                <li>Do not upload content that illustrates/portrays illegal activities.</li>
+                <li>Do not upload malware to the service.</li>
+                <li>Do not spam or misuse the service.</li>
+                <li>Account sharing is prohibited.</li>
+            </ol>
+            <p class="mb-2">If you feel that a user has broken the rules above, please send an email to <code>moocow@moocow.dev</code>. Automatic measures are also put in place to prevent the misuse of this service.</p>
+        </div>
+        `
     }
 }
 function handlePathCode(path) {
@@ -295,7 +413,14 @@ function checkPath() {
     }
     setDocument('', null, false)
 }
-
+$.ajax({
+    url: '/api/user',
+    method: 'GET',
+    error: console.error,
+    success: function (data) {
+        user = data
+    }
+})
 $(document).ready(() => {
     checkPath()
     for (let page of Object.keys(pages)) {
@@ -319,8 +444,7 @@ $(document).ready(() => {
         e.stopPropagation()
     })
     $('#modal').click(() => {
-        $('#modal').removeClass('visible')
-
+        if (isModalClosable) $('#modal').removeClass('visible')
     })
     let modal = document.getElementById('modal')
     modal.addEventListener('transitionend', () => {
