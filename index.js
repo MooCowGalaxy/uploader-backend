@@ -31,6 +31,9 @@ const {getUser} = require('./util/authFunctions')(pool)
 app.use(express.json())
 app.use('/static', express.static('static'))
 app.use('/dist', express.static('dist'))
+app.get('/dist/tw/index.min.js', (req, res) => {
+    res.sendFile(path.resolve('./node_modules/tw-elements/dist/js/index.min.js'))
+})
 app.use('/auth', oauth(pool))
 
 process.on('unhandledRejection', reason => {
@@ -85,6 +88,7 @@ const options = {
     query,
     saveFile,
     resolvePlaceholders,
+    deleteFile,
 }
 
 let middlewareCount = 0

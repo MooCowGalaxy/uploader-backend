@@ -10,6 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "@relaycorp/object-storage": "^1.4.35",
+    "@tailwindcss/forms": "^0.5.2",
     "discord-oauth2": "^2.10.0",
     "ejs": "^3.1.8",
     "express": "^4.18.1",
@@ -20,7 +21,8 @@
     "mysql": "^2.18.1",
     "mysql2": "^2.3.3",
     "node-schedule": "^2.1.0",
-    "redis": "^4.1.0"
+    "redis": "^4.1.0",
+    "tw-elements": "^1.0.0-alpha12"
   },
   "devDependencies": {
     "@aws-sdk/types": "^3.110.0",

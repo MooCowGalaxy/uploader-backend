@@ -55,7 +55,7 @@ button {
     transform: translateY(0);
     transition: transform 200ms ease-in-out;
 }
-button:hover {
+button:not(.accordion-button):not([disabled]):hover {
     transform: translateY(-0.125rem);
 }
 .theme-color {
@@ -391,4 +391,42 @@ code {
 }
 #modal.visible > #modal-container {
     transform: translateY(0);
+}
+
+.discord-embed-container {
+    background-color: #363940;
+    border-radius: 0.375rem;
+}
+.discord-embed-preview {
+    border-radius: 4px;
+    padding: 0.5rem 1rem 1rem 0.75rem;
+    border-left-style: solid;
+    border-left-width: 4px;
+    border-left-color: hsl(207, 13%, 13.5%);
+    width: max-content;
+    background-color: #2f3136;
+}
+.discord-embed-preview > * {
+    margin-top: 8px;
+}
+.discord-embed-site-name {
+    font-size: 0.75rem;
+    line-height: 1rem;
+    font-weight: 400;
+    color: #dcddde;
+}
+.discord-embed-site-title {
+    font-size: 1rem;
+    font-weight: 600;
+    text-decoration: none;
+    color: hsl(197, 100%, 47.8%);
+}
+.discord-embed-site-title:hover {
+    text-decoration: underline;
+}
+.discord-embed-site-description {
+    color: #dcddde;
+    font-size: 0.875rem;
+    line-height: 1.125rem;
+    font-weight: 400;
 }

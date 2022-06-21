@@ -48,7 +48,9 @@ module.exports = (pool) => {
             userData = result[0]
         } else {
             await query(`INSERT INTO users (username, discord, api_key, tag) VALUES (?, ?, ?, ?)`, [`${cache.username}#${cache.discriminator}`, cache.id, createTokenString(20), `${cache.username}#${cache.discriminator}`])
+            userData = (await query(`SELECT * FROM users WHERE discord = ?`, [u.user_id]))[0]
         }
+        userData.settings = JSON.parse(userData.settings)
         return {userId: u.user_id, data: cache, user: userData}
     }
 

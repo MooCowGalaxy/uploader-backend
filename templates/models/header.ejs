@@ -7,9 +7,10 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@3.8.0/dist/chart.min.js" integrity="sha256-cHVO4dqZfamRhWD7s4iXyaXWVK10odD+qp4xidFzqTI=" crossorigin="anonymous"></script>
 <link rel="stylesheet" href="/dist/output.css" type="text/css">
+<script src="/dist/tw/index.min.js"></script>
 <script src="/static/js/fade.js"></script>
 <script src="/static/js/authorization.js"></script>
-<% if (image) { %>
+<% if (image && embedSettings.enabled) { %>
     <meta name="twitter:card" content="summary_large_image">
     <meta property="og:image" content="<%= `/raw/${imageData.fileId}.${imageData.extension}` %>">
     <link type="application/json+oembed" href="/api/embed">
@@ -17,4 +18,6 @@
     <meta property="og:site_name" content="<%= embedSettings.siteName %>">
     <meta name="og:title" content="<%= embedSettings.title %>">
     <meta name="og:description" content="<%= embedSettings.description %>">
+<% } else if (image) { %>
+    <meta property="og:image" content="<%= `/raw/${imageData.fileId}.${imageData.extension}` %>">
 <% } %>

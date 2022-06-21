@@ -10,14 +10,15 @@ function getRouter({query, resolvePlaceholders}) {
     const imageRouter = express.Router()
 
     imageRouter.get('/:id', async (req, res, next) => {
-        if (req.hostname === 'mooi.ng' && !config.production) return next();
+        if (req.hostname === 'mooi.ng' && config.production) return next();
 
         let fileName = req.params.id;
-        if (!config.production && !fileName.includes('.')) return next();
+        if (!fileName.includes('.')) return next();
         if (fileName.includes('/')) return next();
+        if (fileName.startsWith('dashboard')) return next();
         let fileId = fileName.split('.').slice(0, -1).join(".")
 
-        let results = await query(`SELECT * FROM images WHERE fileId = ?`, [fileId])
+        let results = await query(`SELECT * FROM images WHERE fileId = ? AND domain = ?`, [fileId, req.hostname])
         if (results.length === 0) return res.status(404).send(await renderFile('notFound'))
         let result = results[0]
         if (!(['png', 'jpg', 'gif'].includes(`${result.extension}`))) {
