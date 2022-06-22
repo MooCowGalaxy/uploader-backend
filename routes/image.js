@@ -18,7 +18,9 @@ function getRouter({query, resolvePlaceholders}) {
         if (fileName.startsWith('dashboard')) return next();
         let fileId = fileName.split('.').slice(0, -1).join(".")
 
-        let results = await query(`SELECT * FROM images WHERE fileId = ? AND domain = ?`, [fileId, req.hostname])
+        let results;
+        if (config.production) results = await query(`SELECT * FROM images WHERE fileId = ? AND domain = ?`, [fileId, req.hostname])
+        else results = await query(`SELECT * FROM images WHERE fileId = ?`, [fileId])
         if (results.length === 0) return res.status(404).send(await renderFile('notFound'))
         let result = results[0]
         if (!(['png', 'jpg', 'gif'].includes(`${result.extension}`))) {
@@ -49,7 +51,8 @@ function getRouter({query, resolvePlaceholders}) {
         if (!user.settings.embed) user.settings.embed = {}
         let embedSettings = {}
         for (let entry of Object.entries(user.settings.embed)) {
-            embedSettings[entry[0]] = await resolvePlaceholders(entry[1], user, result)
+            if (entry[0] !== 'enabled') embedSettings[entry[0]] = await resolvePlaceholders(entry[1], user, result)
+            else embedSettings.enabled = entry[1]
         }
 
         let data = {

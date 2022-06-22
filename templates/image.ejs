@@ -17,10 +17,10 @@
             <span class="text-2xl md:text-3xl lg:text-4xl gradient text-bright-cyan font-bold text-center"><%= `${image.fileId}.${image.extension}` %></span>
         </div>
         <img src="/raw/<%= `${image.fileId}.${image.extension}` %>" alt="" class="rounded-lg mb-4 mx-auto">
-        <p class="text-center text-md lg:text-lg font-light mb-1">Uploaded by <b style="color: <%= user.settings.color ? user.settings.color : '#fff' %>" class="font-semibold"><%= user.username %></b> at <b id="time" class="text-amber-600 font-semibold"><%= new Date(image.timestamp).toUTCString() %></b></p>
-        <p class="text-center text-sm lg:text-md mb-3 font-light">Dimensions: <b class="text-lime-600 font-semibold"><%= `${image.width} x ${image.height}` %></b> | Size: <b class="text-lime-600 font-semibold"><%= `${humanReadableSize}` %></b> | Viewed <b class="text-lime-600 font-semibold"><%= image.viewCount %></b> time<%= image.viewCount === 1 ? '' : 's' %></p>
+        <p class="text-center text-md lg:text-lg font-normal mb-1">Uploaded by <b style="color: <%= user.settings.color ? user.settings.color : '#fff' %>" class="font-semibold"><%= user.username %></b> at <b id="time" class="text-amber-600 font-semibold"><%= new Date(image.timestamp).toUTCString() %></b></p>
+        <p class="text-center text-sm lg:text-md mb-3 font-normal">Dimensions: <b class="text-lime-600 font-semibold"><%= `${image.width} x ${image.height}` %></b> | Size: <b class="text-lime-600 font-semibold"><%= `${humanReadableSize}` %></b> | Viewed <b class="text-lime-600 font-semibold"><%= image.viewCount %></b> time<%= image.viewCount === 1 ? '' : 's' %></p>
         <hr class="border-gray-300 mb-3">
-        <p class="text-center text-sm lg:text-md font-extralight"><a href="/" class="text-sky-500 underline hover:text-sky-600">mooi.ng</a> private image host</p>
+        <p class="text-center text-sm lg:text-md font-normal"><a href="/" class="text-sky-500 underline hover:text-sky-600">mooi.ng</a> private image host</p>
     </div>
 </div>
 </body>
