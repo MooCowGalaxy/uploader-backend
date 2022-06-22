@@ -109,7 +109,7 @@ function getRouter({checkForDomain, getUser, query, saveFile, deleteFile}) {
         let total = await query(`SELECT COUNT(*) AS total FROM images WHERE ownerId = ?`, [user.user.id])
         let limit = Math.ceil(parseInt(total[0].total) / rowLimit)
         if (limit < page) return res.send({success: true, pages: {total: parseInt(total[0].total), page, limit}, sort, data: []})
-        let results = await query(`SELECT fileId, originalName, size, timestamp, extension, viewCount, domain FROM images WHERE ownerId = ? ${sortQuery} LIMIT ?, ?`,
+        let results = await query(`SELECT fileId, originalName, size, timestamp, extension, viewCount, domain, alias FROM images WHERE ownerId = ? ${sortQuery} LIMIT ?, ?`,
             [user.user.id, rowLimit * (page - 1), rowLimit])
         res.json({success: true, pages: {total: parseInt(total[0].total), page, limit}, sort, data: results})
     })
