@@ -96,6 +96,36 @@ function setDocument(URL, title = null, push = true) {
 function onURLUpdate() {
     checkPath()
 }
+function fallbackCopyTextToClipboard(text) {
+    let textArea = document.createElement("textarea")
+    textArea.value = text
+    textArea.style.top = "0"
+    textArea.style.left = "0"
+    textArea.style.position = "fixed"
+
+    document.body.appendChild(textArea)
+    textArea.focus()
+    textArea.select()
+
+    try {
+        document.execCommand('copy')
+    } catch {}
+
+    document.body.removeChild(textArea)
+}
+function copyTextToClipboard(text) {
+    if (!navigator.clipboard) {
+        fallbackCopyTextToClipboard(text)
+        return
+    }
+    navigator.clipboard.writeText(text).then().catch(console.error)
+}
+$('#sort').on('input', () => {
+    sort = $('#sort').val()
+    page = 0
+    $('#image-gallery-container').empty()
+    loadMore()
+})
 const routes = {
     '': 'p-home',
     '/': 'r-',
@@ -166,6 +196,11 @@ const pages = {
                             }]
                         },
                         options: {
+                            elements: {
+                                point: {
+                                    radius: 0
+                                }
+                            },
                             interaction: {
                                 mode: 'index',
                                 intersect: false
@@ -299,6 +334,15 @@ const pages = {
                 }
                 isAPIKeyVisible = !isAPIKeyVisible
             })
+            $('#page-user-api-key-copy').click(() => {
+                copyTextToClipboard(user.user.apiKey)
+                $('#page-user-api-key-copy').addClass('text-green-500')
+                $('#page-user-api-key-copy').prop('disabled', true)
+                setTimeout(() => {
+                    $('#page-user-api-key-copy').removeClass('text-green-500')
+                    $('#page-user-api-key-copy').prop('disabled', false)
+                }, 1000)
+            })
             $('#page-user-api-key-regenerate').click(() => {
                 onModalButton1Click = [closeModal]
                 onModalButton2Click = [() => {
@@ -333,6 +377,36 @@ const pages = {
                               <button id="modal-button-2" onclick="modalButton2Click()" class="px-3 py-2 rounded-lg bg-red-300 disabled:opacity-75">Regenerate</button>`
                 })
             })
+            $('#page-user-link-type').val(user.user.linkType)
+            $('#page-user-link-type').on('input', () => {
+                if ($('#page-user-link-type').val() === user.user.linkType.toString()) {
+                    $('#page-user-save-link').prop('disabled', true)
+                    return
+                }
+                $('#page-user-save-link').prop('disabled', false)
+            })
+            $('#page-user-save-link').click(() => {
+                $('#page-user-save-link').prop('disabled', true)
+                $('#page-user-save-link').html(`<div class="spinner-border animate-spin inline-block w-4 h-4 border rounded-full text-gray-800" role="status">
+    <span class="visually-hidden">Saving...</span>
+</div><span class="text-gray-800"> Saving...</span>`)
+                $.ajax({
+                    url: '/api/user/link',
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    data: JSON.stringify({type: parseInt($('#page-user-link-type').val())}),
+                    error: console.error,
+                    success: () => {
+                        $('#page-user-save-link').html('Saved!')
+                        updateUserData()
+                        setTimeout(() => {
+                            $('#page-user-save-link').text('Save')
+                        }, 1500)
+                    }
+                })
+            })
         },
         html: `
 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -341,6 +415,11 @@ const pages = {
         <div class="rounded border border-gray-300 px-4 py-2.5 mb-2 relative">
             <p id="page-user-api-key">*********************</p>
             <div class="absolute right-4 top-2.5">
+                <button id="page-user-api-key-copy">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                    </svg>
+                </button>
                 <button id="page-user-api-key-view">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
@@ -356,6 +435,18 @@ const pages = {
         <h1 class="mb-2">ShareX Config</h1>
         <a class="px-4 py-2 bg-sky-500 text-white rounded-md" href="/api/config/sharex" target="_blank" rel="noopener noreferrer">Download</a>
     </div>
+    <div class="content">
+        <h1 class="mb-2">Link Type</h1>
+        <label for="page-user-link-type">Set link type</label>
+        <select id="page-user-link-type" class="form-select appearance-none block w-max pr-10 px-3 py-1.5 mb-3 text-base font-normal text-gray-700 bg-white bg-clip-padding bg-no-repeat border border-solid border-gray-300 rounded transition ease-in-out m-0 focus:text-gray-700 focus:bg-white focus:border-blue-600 focus:outline-none">
+            <option value="0" id="0" class="type">Random alphanumeric</option>
+            <option value="1" id="1" class="type">Random emojis</option>
+            <option value="2" id="2" class="type">Zero width characters</option>
+        </select>
+        <button disabled id="page-user-save-link" class="px-4 py-2 bg-green-300 rounded-md disabled:opacity-75 disabled:bg-gray-300">
+            Save
+        </button>
+    </div>
 </div>
         `
     },
@@ -364,7 +455,7 @@ const pages = {
         onLoad: () => {
             $('#pfp').html(`<img class="rounded-full w-12 h-12" src="${user.data.avatar ? `https://cdn.discordapp.com/avatars/${user.data.id}/${user.data.avatar}.png?size=64` : ''}" alt="">`)
             $('#page-embed-username').text(user.data.username)
-            $('#embed-preview-link').text(`https://${user.user.domain}/aBcD1234.png`)
+            $('#embed-preview-link').text(`https://${user.user.domain}/${user.user.linkType === 0 ? 'aBcD1234.png' : ''}`)
             let original;
             function setButtonStatus(enabled = false) {
                 $('#page-embed-save').prop('disabled', !enabled)
@@ -598,36 +689,6 @@ const pages = {
         onLoad: () => {
             let sort = 0
             let page = 0
-            function fallbackCopyTextToClipboard(text) {
-                let textArea = document.createElement("textarea")
-                textArea.value = text
-                textArea.style.top = "0"
-                textArea.style.left = "0"
-                textArea.style.position = "fixed"
-
-                document.body.appendChild(textArea)
-                textArea.focus()
-                textArea.select()
-
-                try {
-                    document.execCommand('copy')
-                } catch {}
-
-                document.body.removeChild(textArea)
-            }
-            function copyTextToClipboard(text) {
-                if (!navigator.clipboard) {
-                    fallbackCopyTextToClipboard(text)
-                    return
-                }
-                navigator.clipboard.writeText(text).then().catch(console.error)
-            }
-            $('#sort').on('input', () => {
-                sort = $('#sort').val()
-                page = 0
-                $('#image-gallery-container').empty()
-                loadMore()
-            })
 
             function loadMore() {
                 $('#load-more').prop('disabled', true)
@@ -655,7 +716,8 @@ const pages = {
                         for (let image of data.data) {
                             $('#image-gallery-container').append(`
 <div class="content" id="i-${image.fileId}">
-    <p class="text-center font-semibold">${image.fileId}.${image.extension}</p>
+    <p class="text-center font-bold">${image.fileId}.${image.extension}</p>
+    <p class="text-center font-semibold mb-2">Original: ${image.originalName}</p>
     <img src="/raw/${image.fileId}.${image.extension}" alt="" class="mx-auto w-auto max-w-full max-h-40 mb-3 rounded-md object-contain">
     <p class="mb-3 text-center">${new Date(parseInt(image.timestamp)).toLocaleString()}<br>${humanReadableBytes(parseInt(image.size))} - viewed ${image.viewCount} times</p>
     <div class="flex justify-center">

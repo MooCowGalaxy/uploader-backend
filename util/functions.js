@@ -50,5 +50,21 @@ module.exports = {
             token = `${token}${base62[Math.floor(Math.random() * base62.length)]}`
         }
         return token
+    },
+    createEmojiString(num = 4) {
+        const emojis = require('emojis-list')
+        let str = ''
+        for (let i = 0; i < num; i++) {
+            str = `${str}${emojis[Math.floor(Math.random() * emojis.length)]}`
+        }
+        return str
+    },
+    createZWSString(num = 20) {
+        const zws = '\u200B\u200C\u200D\u2060'.split('')
+        let str = ''
+        for (let i = 0; i < num; i++) {
+            str = `${str}${zws[Math.floor(Math.random() * zws.length)]}`
+        }
+        return str
     }
 }

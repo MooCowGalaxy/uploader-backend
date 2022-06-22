@@ -1,5 +1,5 @@
 const express = require("express");
-const {humanReadableBytes, createTokenString} = require("../util/functions");
+const {humanReadableBytes, createTokenString, createEmojiString, createZWSString} = require("../util/functions");
 const sizeOfImage = require("image-size");
 const upload = require('multer')()
 let fileTypeFromBuffer;
@@ -35,7 +35,7 @@ function getRouter({checkForDomain, getUser, query, saveFile, deleteFile}) {
     api.get('/user', async (req, res) => {
         const user = await getUser(req)
         if (!user) return res.status(401).send({success: false, error: 'Unauthorized'})
-        res.send({success: true, data: user.data, user: {storageQuota: user.user.storage_quota, uploadLimit: user.user.upload_limit, uploadCount: user.user.upload_count, bytesUsed: parseInt(user.user.bytes_used), bytesHuman: humanReadableBytes(user.user.bytes_used), domain: user.user.domain, apiKey: user.user.api_key}})
+        res.send({success: true, data: user.data, user: {storageQuota: user.user.storage_quota, uploadLimit: user.user.upload_limit, uploadCount: user.user.upload_count, bytesUsed: parseInt(user.user.bytes_used), bytesHuman: humanReadableBytes(user.user.bytes_used), domain: user.user.domain, apiKey: user.user.api_key, linkType: user.user.link_type}})
     })
     api.post('/user/regenerate', async (req, res) => {
         const user = await getUser(req)
@@ -43,6 +43,16 @@ function getRouter({checkForDomain, getUser, query, saveFile, deleteFile}) {
         let apiKey = createTokenString(20)
         await query(`UPDATE users SET api_key = ? WHERE id = ?`, [apiKey, user.user.id])
         res.send({success: true, apiKey})
+    })
+    api.post('/user/link', async (req, res) => {
+        const user = await getUser(req)
+        if (!user) return res.status(401).send({success: false, error: 'Unauthorized'})
+        const body = req.body
+        if (typeof body !== "object") return res.status(400).send({success: false, error: 'Bad Request'})
+        if (typeof body.type !== 'number') return res.status(400).send({success: false, error: 'Bad Request'})
+        if (body.type > 2 || body.type < 0) return res.status(400).send({success: false, error: 'Bad Request'})
+        await query(`UPDATE users SET link_type = ? WHERE id = ?`, [body.type, user.user.id])
+        res.send({success: true})
     })
     api.get('/user/embed', async (req, res) => {
         const user = await getUser(req)
@@ -205,11 +215,11 @@ function getRouter({checkForDomain, getUser, query, saveFile, deleteFile}) {
         if (user.bytes_used + file.size > user.storage_quota * 1000 * 1000 * 1000) return res.status(400).json({error: true, message: 'Storage quota exceeded'})
 
         let extension = file.originalname.split('.').slice(-1)
-        let fileId = createTokenString(9)
+        let fileId = [createTokenString(9), createEmojiString(4), createZWSString(20)][user.link_type]
         let fileName = `${fileId}.${extension}`
         await saveFile(fileName, file.buffer)
 
-        let url = `https://${user.domain}/${fileName}`
+        let url = `https://${user.domain}/${fileId}`
         let dimensions = ['png', 'jpg', 'jpeg', 'gif'].includes(extension[0]) ? sizeOfImage(file.buffer) : {width: 0, height: 0}
         let data = {
             fileId,

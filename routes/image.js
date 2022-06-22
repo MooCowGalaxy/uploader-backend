@@ -13,10 +13,9 @@ function getRouter({query, resolvePlaceholders}) {
         if (req.hostname === 'mooi.ng' && config.production) return next();
 
         let fileName = req.params.id;
-        if (!fileName.includes('.')) return next();
         if (fileName.includes('/')) return next();
         if (fileName.startsWith('dashboard')) return next();
-        let fileId = fileName.split('.').slice(0, -1).join(".")
+        let fileId = fileName
 
         let results;
         if (config.production) results = await query(`SELECT * FROM images WHERE fileId = ? AND domain = ?`, [fileId, req.hostname])
