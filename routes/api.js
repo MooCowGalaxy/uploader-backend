@@ -215,11 +215,12 @@ function getRouter({checkForDomain, getUser, query, saveFile, deleteFile}) {
         if (user.bytes_used + file.size > user.storage_quota * 1000 * 1000 * 1000) return res.status(400).json({error: true, message: 'Storage quota exceeded'})
 
         let extension = file.originalname.split('.').slice(-1)
-        let fileId = [createTokenString(9), createEmojiString(4), createZWSString(20)][user.link_type]
+        let fileId = createTokenString(9)
         let fileName = `${fileId}.${extension}`
+        let fileAlias = [fileId, createEmojiString(4), createZWSString(20)][user.link_type]
         await saveFile(fileName, file.buffer)
 
-        let url = `https://${user.domain}/${fileId}`
+        let url = `https://${user.domain}/${fileAlias}`
         let dimensions = ['png', 'jpg', 'jpeg', 'gif'].includes(extension[0]) ? sizeOfImage(file.buffer) : {width: 0, height: 0}
         let data = {
             fileId,
@@ -234,8 +235,8 @@ function getRouter({checkForDomain, getUser, query, saveFile, deleteFile}) {
         }
 
         await query(
-            `INSERT INTO images (fileId, originalName, size, timestamp, extension, ownerId, width, height, domain) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [data.fileId, data.originalName, data.size, data.timestamp, data.extension, data.ownerId, data.width, data.height, user.domain]
+            `INSERT INTO images (fileId, originalName, size, timestamp, extension, ownerId, width, height, domain, alias) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [data.fileId, data.originalName, data.size, data.timestamp, data.extension, data.ownerId, data.width, data.height, user.domain, fileAlias]
         )
         global.totalFiles++;
         global.totalBytes += data.size;

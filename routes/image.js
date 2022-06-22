@@ -8,20 +8,15 @@ const namespace = '/'
 
 function getRouter({query, resolvePlaceholders}) {
     const imageRouter = express.Router()
+    imageRouter.get('/i/:id', async (req, res, next) => {
+        if (req.hostname !== 'mooi.ng' && config.production) return next();
+        const fileId = req.params.id
 
-    imageRouter.get('/:id', async (req, res, next) => {
-        if (req.hostname === 'mooi.ng' && config.production) return next();
-
-        let fileName = req.params.id;
-        if (fileName.includes('/')) return next();
-        if (fileName.startsWith('dashboard')) return next();
-        let fileId = fileName
-
-        let results;
-        if (config.production) results = await query(`SELECT * FROM images WHERE fileId = ? AND domain = ?`, [fileId, req.hostname])
-        else results = await query(`SELECT * FROM images WHERE fileId = ?`, [fileId])
-        if (results.length === 0) return res.status(404).send(await renderFile('notFound'))
+        let results = await query(`SELECT * FROM images WHERE fileId = ?`, [fileId])
+        if (results.length === 0) return res.send(await renderFile('notFound'))
         let result = results[0]
+        let fileName = `${result.fileId}.${result.extension}`
+
         if (!(['png', 'jpg', 'gif'].includes(`${result.extension}`))) {
             return res.sendFile(path.resolve(`${config.savePath}/${fileName}`))
         }
@@ -62,6 +57,22 @@ function getRouter({query, resolvePlaceholders}) {
         }
 
         res.send(await renderFile('image', data))
+    })
+
+    imageRouter.get('/:id', async (req, res, next) => {
+        if (req.hostname === 'mooi.ng' && config.production) return next();
+
+        let fileAlias = req.params.id;
+        if (fileAlias.includes('/')) return next();
+        if (fileAlias.startsWith('dashboard')) return next();
+        let results;
+
+        if (config.production) results = await query(`SELECT * FROM images WHERE alias = ? AND domain = ?`, [fileAlias, req.hostname])
+        else results = await query(`SELECT * FROM images WHERE alias = ?`, [fileAlias])
+        if (results.length === 0) return res.status(404).send(await renderFile('notFound'))
+        let result = results[0]
+
+        res.redirect(`${config.production ? 'https://mooi.ng' : ''}/i/${result.fileId}`)
     })
 
     return imageRouter
