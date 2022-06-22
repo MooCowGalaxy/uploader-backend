@@ -74,6 +74,7 @@ function getRouter({checkForDomain, getUser, query, saveFile, deleteFile}) {
         }
 
         user.user.settings.color = body.color !== undefined ? body.color : user.user.settings.color
+        if (typeof user.user.settings.embed === 'undefined') user.user.settings.embed = {}
         user.user.settings.embed.enabled = body.enabled !== undefined ? body.enabled : user.user.settings.embed.enabled
         user.user.settings.embed.siteName = body.name !== undefined ? body.name : user.user.settings.embed.siteName
         user.user.settings.embed.title = body.title !== undefined ? body.title : user.user.settings.embed.title

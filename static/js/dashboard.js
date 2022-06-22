@@ -3,6 +3,7 @@ let onModalButton2Click = []
 let isModalClosable = true
 let route = null;
 let user = null;
+let beforePageChangeHook;
 
 function closeModal() {
     $('#modal').removeClass('visible')
@@ -361,7 +362,7 @@ const pages = {
     embed: {
         title: 'Embed Settings',
         onLoad: () => {
-            $('#pfp').html(`<img class="rounded-full w-12 h-12" src="https://cdn.discordapp.com/avatars/${user.data.id}/${user.data.avatar}.png?size=64">`)
+            $('#pfp').html(`<img class="rounded-full w-12 h-1" src="${user.data.avatar ? `https://cdn.discordapp.com/avatars/${user.data.id}/${user.data.avatar}.png?size=64` : ''}" alt="">`)
             $('#page-embed-username').text(user.data.username)
             $('#embed-preview-link').text(`https://${user.user.domain}/aBcD1234.png`)
             let original;
@@ -387,10 +388,10 @@ const pages = {
                 return newText
             }
             function embedHasChanges() {
-                if ($('#page-embed-embed-toggle').prop('checked') !== original.embed.enabled) return true
-                if ($('#page-embed-input-site-name').val() !== original.embed.siteName) return true
-                if ($('#page-embed-input-title').val() !== original.embed.title) return true
-                if ($('#page-embed-input-description').val() !== original.embed.description) return true
+                if ($('#page-embed-embed-toggle').prop('checked') !== original.embed?.enabled) return true
+                if ($('#page-embed-input-site-name').val() !== original.embed?.siteName) return true
+                if ($('#page-embed-input-title').val() !== original.embed?.title) return true
+                if ($('#page-embed-input-description').val() !== original.embed?.description) return true
                 if ($('#page-embed-input-color').val() !== original.color) return true
                 return false
             }
@@ -398,9 +399,9 @@ const pages = {
                 if (getError()) return;
                 if (!embedHasChanges()) return;
                 setButtonStatus(false)
-                $('#page-embed-save').html(`<div class="spinner-border animate-spin inline-block w-8 h-8 border-4 rounded-full text-gray-300" role="status">
+                $('#page-embed-save').html(`<div class="spinner-border animate-spin inline-block w-4 h-4 border rounded-full text-gray-800" role="status">
     <span class="visually-hidden">Saving...</span>
-  </div>`)
+</div><span class="text-gray-800"> Saving...</span>`)
                 $.ajax({
                     url: '/api/user/embed',
                     method: 'POST',
@@ -410,14 +411,14 @@ const pages = {
                     },
                     data: JSON.stringify({
                         name: $('#page-embed-input-site-name').val(),
-                        title: $('#page-embed-input').val(),
+                        title: $('#page-embed-input-title').val(),
                         description: $('#page-embed-input-description').val(),
                         color: $('#page-embed-input-color').val(),
                         enabled: $('#page-embed-embed-toggle').prop('checked')
                     }),
                     error: console.error,
                     success: () => {
-                        $('#page-embed-save').text('Saved!')
+                        $('#page-embed-save').html('Saved!')
                         setTimeout(() => {
                             $('#page-embed-save').text('Save Changes')
                             updateData()
@@ -466,10 +467,10 @@ const pages = {
                     error: console.error,
                     success: (data) => {
                         if (data.success) {
-                            $('#page-embed-embed-toggle').prop('checked', !!data.data.embed.enabled)
-                            $('#page-embed-input-site-name').val(data.data.embed.siteName !== undefined ? data.data.embed.siteName : '')
-                            $('#page-embed-input-title').val(data.data.embed.title !== undefined ? data.data.embed.title : '')
-                            $('#page-embed-input-description').val(data.data.embed.description !== undefined ? data.data.embed.description : '')
+                            $('#page-embed-embed-toggle').prop('checked', !!data.data.embed?.enabled)
+                            $('#page-embed-input-site-name').val(data.data.embed?.siteName !== undefined ? data.data.embed.siteName : '')
+                            $('#page-embed-input-title').val(data.data.embed?.title !== undefined ? data.data.embed.title : '')
+                            $('#page-embed-input-description').val(data.data.embed?.description !== undefined ? data.data.embed.description : '')
                             $('#page-embed-input-color').val(data.data.color !== undefined ? data.data.color : '#000000')
                             original = data.data
                             updateEmbed()
@@ -478,6 +479,26 @@ const pages = {
                 })
             }
             updateData()
+
+            beforePageChangeHook = function () {
+                return new Promise(resolve => {
+                    if (embedHasChanges()) {
+                        unsavedChangesModal({
+                            onDiscard: () => {
+                                closeModal()
+                                resolve(true)
+                            },
+                            onSaveChanges: () => {
+                                $('#page-embed-save').click()
+                                setTimeout(() => {
+                                    closeModal()
+                                    resolve(true)
+                                }, 250)
+                            }
+                        })
+                    } else resolve(true)
+                })
+            }
         },
         html: `
 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -621,6 +642,11 @@ const pages = {
                         page = data.pages.page
                         $('#load-more').prop('disabled', false)
                         $('#load-more').text('Load More')
+                        if (data.pages.total === 0) {
+                            $('#load-more').addClass('hidden')
+                            $('#image-gallery-container').html(`No images.`)
+                            return;
+                        }
                         if (data.pages.limit === page) {
                             $('#load-more').addClass('hidden')
                         } else {
@@ -765,6 +791,7 @@ const pages = {
                     },
                     success: () => {
                         $('#page-domains-save').text('Saved!')
+                        updateUserData()
                         setTimeout(() => {
                             $('#page-domains-save').text('Save')
                             $('#page-domains-save').prop('disabled', false)
@@ -814,17 +841,26 @@ function handlePathCode(path) {
     if (path.startsWith('p-')) {
         let page = path.slice(2)
         if (route === page) return;
-        route = page
-        changes = {}
-        $('.page-visible').html('');
-        $('.page-visible').removeClass('page-visible')
-        $(`#page-${page}`).addClass('page-visible')
-        $(`#page-${page}`).html(pages[page].html)
-        $('.sidebar-item').removeClass('active')
-        $(`#sidebar-${page}`).addClass('active')
-        $('#page-title').text(pages[page].title)
-        if (isSmall()) closeSidebar()
-        if (typeof pages[page].onLoad === 'function') pages[path.slice(2)].onLoad()
+        function changePage() {
+            beforePageChangeHook = undefined;
+            route = page
+            changes = {}
+            $('.page-visible').html('');
+            $('.page-visible').removeClass('page-visible')
+            $(`#page-${page}`).addClass('page-visible')
+            $(`#page-${page}`).html(pages[page].html)
+            $('.sidebar-item').removeClass('active')
+            $(`#sidebar-${page}`).addClass('active')
+            $('#page-title').text(pages[page].title)
+            if (isSmall()) closeSidebar()
+            if (typeof pages[page].onLoad === 'function') pages[path.slice(2)].onLoad()
+        }
+        if (typeof beforePageChangeHook === 'function') {
+            let hook = beforePageChangeHook()
+            hook.then(r => {
+                if (r) changePage()
+            })
+        } else changePage()
     } else if (path.startsWith('r-')) {
         setDocument(path.slice(2), null, false)
     }
@@ -839,49 +875,52 @@ function checkPath() {
     }
     setDocument('', null, false)
 }
-$.ajax({
-    url: '/api/user',
-    method: 'GET',
-    error: console.error,
-    success: function (data) {
-        user = data
-        $(document).ready(() => {
-            checkPath()
-            for (let page of Object.keys(pages)) {
-                $(`#sidebar-${page}`).click(() => {
-                    setDocument(`/${page}`)
-                })
-            }
+function updateUserData() {
+    $.ajax({
+        url: '/api/user',
+        method: 'GET',
+        error: console.error,
+        success: function (data) {
+            user = data
+            $(document).ready(() => {
+                checkPath()
+                for (let page of Object.keys(pages)) {
+                    $(`#sidebar-${page}`).click(() => {
+                        setDocument(`/${page}`)
+                    })
+                }
 
-            $('#toggle-sidebar-button').click(() => {
-                if ($('#sidebar').hasClass('closed')) {
-                    openSidebar()
-                } else {
-                    closeSidebar()
-                }
+                $('#toggle-sidebar-button').click(() => {
+                    if ($('#sidebar').hasClass('closed')) {
+                        openSidebar()
+                    } else {
+                        closeSidebar()
+                    }
+                })
+                $('#close-sidebar').click(() => {
+                    $('#sidebar').addClass('closed')
+                    $('#sidebar-placeholder').addClass('closed')
+                })
+                $('#modal-container').click((e) => {
+                    e.stopPropagation()
+                })
+                $('#modal').click(() => {
+                    if (isModalClosable) $('#modal').removeClass('visible')
+                })
+                let modal = document.getElementById('modal')
+                modal.addEventListener('transitionend', () => {
+                    if (!$('#modal').hasClass('visible')) {
+                        $('#modal').css('z-index', '-100')
+                    }
+                }, true)
+                modal.addEventListener('transitionrun', () => {
+                    if ($('#modal').hasClass('visible')) {
+                        $('#modal').css('z-index', '20')
+                    }
+                })
+                if (isSmall()) closeSidebar(true)
             })
-            $('#close-sidebar').click(() => {
-                $('#sidebar').addClass('closed')
-                $('#sidebar-placeholder').addClass('closed')
-            })
-            $('#modal-container').click((e) => {
-                e.stopPropagation()
-            })
-            $('#modal').click(() => {
-                if (isModalClosable) $('#modal').removeClass('visible')
-            })
-            let modal = document.getElementById('modal')
-            modal.addEventListener('transitionend', () => {
-                if (!$('#modal').hasClass('visible')) {
-                    $('#modal').css('z-index', '-100')
-                }
-            }, true)
-            modal.addEventListener('transitionrun', () => {
-                if ($('#modal').hasClass('visible')) {
-                    $('#modal').css('z-index', '20')
-                }
-            })
-            if (isSmall()) closeSidebar(true)
-        })
-    }
-})
+        }
+    })
+}
+updateUserData()
