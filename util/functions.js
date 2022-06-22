@@ -1,6 +1,10 @@
-const ejs = require("ejs");
+const ejs = require("ejs")
+const config = require('../config.json')
+
 module.exports = {
     renderFile(filename, data = {}) {
+        data.discordInvite = config.discord.invite
+        data.production = config.production
         return new Promise((resolve, reject) => {
             filename = `templates/${filename}.ejs`
             ejs.renderFile(filename, data, {}, function (err, str) {
