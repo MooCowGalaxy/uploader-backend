@@ -29,6 +29,7 @@ const {query} = require('./util/database')(pool)
 const {getUser} = require('./util/authFunctions')(pool)
 
 app.use(express.json())
+
 app.use('/static', express.static('static'))
 app.use('/dist', express.static('dist'))
 app.get('/dist/tw/index.min.js', (req, res) => {
