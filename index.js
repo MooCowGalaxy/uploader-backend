@@ -71,7 +71,7 @@ async function resolvePlaceholders(text = "", user = {}, image = {}) {
     newText = newText.replaceAll('[name]', `${image.fileId}.${image.extension}`)
     if (newText.includes("[dimensions]")) {
         if (image.width === null) {
-            let dimensions = sizeOfImage(`${config.cachePath}/${image.fileId}.${image.extension}`)
+            let dimensions = sizeOfImage(`${config.savePath}/${image.fileId}.${image.extension}`)
             await query(`UPDATE images SET width = ?, height = ? WHERE fileId = ?`, [dimensions.width, dimensions.height, image.fileId])
         }
         newText = newText.replaceAll('[dimensions]', `${image.width} x ${image.height}`)
