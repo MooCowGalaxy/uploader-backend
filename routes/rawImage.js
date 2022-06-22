@@ -8,10 +8,8 @@ import('file-type').then(module => {
 
 const namespace = '/raw'
 
-function getRouter({checkForDomain, query, getFile}) {
+function getRouter({query, getFile}) {
     const rawImageRouter = express.Router()
-
-    rawImageRouter.use(checkForDomain)
 
     rawImageRouter.get('/:id', async (req, res) => {
         if (config.production && req.hostname !== 'mooi.ng') return res.redirect(`https://mooi.ng${req.originalUrl}`)
