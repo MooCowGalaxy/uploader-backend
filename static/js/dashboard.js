@@ -362,7 +362,7 @@ const pages = {
     embed: {
         title: 'Embed Settings',
         onLoad: () => {
-            $('#pfp').html(`<img class="rounded-full w-12 h-1" src="${user.data.avatar ? `https://cdn.discordapp.com/avatars/${user.data.id}/${user.data.avatar}.png?size=64` : ''}" alt="">`)
+            $('#pfp').html(`<img class="rounded-full w-12 h-12" src="${user.data.avatar ? `https://cdn.discordapp.com/avatars/${user.data.id}/${user.data.avatar}.png?size=64` : ''}" alt="">`)
             $('#page-embed-username').text(user.data.username)
             $('#embed-preview-link').text(`https://${user.user.domain}/aBcD1234.png`)
             let original;

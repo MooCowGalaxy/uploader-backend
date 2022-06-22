@@ -64,7 +64,7 @@ async function getFile(fileName) {
     }
 }
 async function resolvePlaceholders(text = "", user = {}, image = {}) {
-    let newText = text
+    let newText = text;
     newText = newText.replaceAll('[date]', new Date(image.timestamp).toUTCString().split(' ').slice(0, 4).join(' '))
     newText = newText.replaceAll('[datetime]', new Date(image.timestamp).toUTCString())
     newText = newText.replaceAll('[filesize]', humanReadableBytes(image.size))
