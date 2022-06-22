@@ -662,7 +662,7 @@ const pages = {
         })}</p>
                 </div>
                 <p class="text-sky-500 hover:underline" id="embed-preview-link"></p>
-                <div class="discord-embed-preview max-w-full" id="embed">
+                <div class="discord-embed-preview" id="embed">
                     <div>
                         <span class="discord-embed-site-name"></span>
                     </div>
