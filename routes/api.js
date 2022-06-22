@@ -201,16 +201,17 @@ function getRouter({checkForDomain, getUser, query, saveFile, deleteFile}) {
         }
 
         // check: file in body
-        if (file.fieldname !== "file") return res.status(400).json({error: true, message: "Invalid file"})
+        if (file.fieldname !== "file") return res.status(400).json({error: true, message: "Invalid file name"})
+        if (file.originalname.length > 255) return res.status(400).json({error: true, message: 'File name too long'})
 
         let mimetype = await fileTypeFromBuffer(file.buffer)
 
         // check: valid file types
-        if (mimetype === undefined) return res.status(400).json({error: true, message: 'Invalid file'})
-        if (!['png', 'jpg', 'jpeg', 'gif'].includes(mimetype.ext)) return res.status(400).json({error: true, message: 'Invalid file'})
+        if (mimetype === undefined) return res.status(400).json({error: true, message: 'Invalid file type'})
+        if (!['png', 'jpg', 'jpeg', 'gif', 'mp4'].includes(mimetype.ext)) return res.status(400).json({error: true, message: 'Invalid file type'})
 
         // check: user quotas - upload limit
-        if (file.size > user.upload_limit * 1000 * 1000) return res.status(400).json({error: true, message: 'File too large'})
+        if (file.size > user.upload_limit * 1000 * 1000) return res.status(400).json({error: true, message: 'Upload size limit exceeded'})
         // check: user quotas - storage limit
         if (user.bytes_used + file.size > user.storage_quota * 1000 * 1000 * 1000) return res.status(400).json({error: true, message: 'Storage quota exceeded'})
 
