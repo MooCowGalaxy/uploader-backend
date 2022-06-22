@@ -14,13 +14,13 @@ function getRouter({checkForDomain, query, getFile}) {
     rawImageRouter.use(checkForDomain)
 
     rawImageRouter.get('/:id', async (req, res) => {
+        if (config.production && req.hostname !== 'mooi.ng') return res.redirect(`https://mooi.ng${req.originalUrl}`)
         let fileName = req.params.id
         let fileId = fileName.split('.').slice(0, -1).join(".")
 
         let results = await query(`SELECT * FROM images WHERE fileId = ?`, [fileId])
         if (results.length === 0) return res.status(404).send(await renderFile('notFound'))
 
-        res.header("Access-Control-Allow-Origin", "*")
         if (config.storageType === 'minio') {
             let buffer = await getFile(fileName)
             if (buffer === null) return res.send(await renderFile('notFound'))
