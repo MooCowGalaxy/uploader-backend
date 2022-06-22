@@ -651,9 +651,9 @@ const pages = {
     </div>
     <div class="content">
         <h1 class="mb-2">Embed Preview</h1>
-        <div class="discord-embed-container p-5 d-flex-row" id="page-embed-container">
+        <div class="discord-embed-container p-5 inline-flex w-full" id="page-embed-container">
             <div class="discord-embed-profile pr-3 flex-initial" id="pfp"></div>
-            <div class="discord-embed-content flex-1">
+            <div class="discord-embed-content flex-1 max-w-full">
                 <div class="discord-embed-username select-none">
                     <h1 class="text-white font-semibold inline mr-1" id="page-embed-username"></h1>
                     <p class="text-gray-400 text-xs inline">Today at ${new Date().toLocaleTimeString([], {
@@ -662,7 +662,7 @@ const pages = {
         })}</p>
                 </div>
                 <p class="text-sky-500 hover:underline" id="embed-preview-link"></p>
-                <div class="discord-embed-preview" id="embed">
+                <div class="discord-embed-preview max-w-full" id="embed">
                     <div>
                         <span class="discord-embed-site-name"></span>
                     </div>
@@ -672,8 +672,8 @@ const pages = {
                     <div>
                         <span class="discord-embed-site-description"></span>
                     </div>
-                    <div class="w-full sm:max-w-3xl">
-                        <img src="/static/img/SXL.png" alt="">
+                    <div>
+                        <img src="/static/img/SXL.png" alt="" class="max-h-28 sm:max-h-36 md:max-h-48 xl:max-h-64 object-contain w-auto max-w-full">
                     </div>
                 </div>
                 <div id="embed-image-only" class="max-w-3xl hidden"><img src="/static/img/SXL.png" alt=""></div>
