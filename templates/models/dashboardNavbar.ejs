@@ -1,0 +1,19 @@
+<nav class="bg-gray-800 sticky top-0 z-50 flex-none">
+    <div class="mx-auto px-2 sm:px-6 lg:px-8">
+        <div class="relative flex items-center justify-between h-16">
+            <div class="flex-1 flex justify-start items-stretch">
+                <div class="flex-shrink-0 flex items-center">
+                    <a href="/" class="text-3xl font-bold select-none"><span class="gradient bg-text-gradient-logo">mooing</span></a>
+                </div>
+            </div>
+            <div class="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
+                <div class="ml-3 relative">
+                    <button class="text-white" id="navbar-dropdown"><%= user.username %><span id="discriminator">#<%= user.discriminator %></span> <i class="bi bi-chevron-down" id="navbar-dropdown-icon"></i><i class="bi bi-chevron-up hidden" id="navbar-dropdown-icon-focus"></i></button>
+                    <div id="n-dropdown" class="origin-top-right absolute right-0 mt-2 w-40 rounded-md shadow-lg py-1 bg-white hidden" role="menu" aria-orientation="vertical" aria-labelledby="user-menu-button" tabindex="-1">
+                        <a href="/auth/logout" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-300" role="menuitem" tabindex="-1" id="user-menu-item-2">Sign out</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>

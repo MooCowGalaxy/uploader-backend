@@ -1,0 +1,83 @@
+<html lang="en-US">
+<head>
+    <title>mooi.ng - a private image host</title>
+    <%- include('models/header.ejs', {image: false}) %>
+    <script src="/static/js/index.js"></script>
+</head>
+<body class="min-h-screen">
+<%- include('models/navbar.ejs') %>
+<div class="container max-w-8xl mx-auto pt-10 sm:pt-14 md:pt-16 lg:pt-20 pb-5 px-5 relative">
+    <section class="my-16 transition-on-load">
+        <p class="font-bold text-white mb-2">
+            <b class="text-4xl sm:text-5xl md:text-6xl lg:text-7xl"><span class="gradient bg-text-gradient-logo">mooing</span></b>
+        </p>
+        <p class="font-normal theme-color">
+            <b class="text-2xl sm:text-3xl">A modern ShareX image host.</b>
+        </p>
+    </section>
+</div>
+<section class="relative">
+    <div class="custom-shape-divider">
+        <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
+            <path d="M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,52.47V0Z" opacity=".25" class="shape-fill"></path>
+            <path d="M0,0V15.81C13,36.92,27.64,56.86,47.69,72.05,99.41,111.27,165,111,224.58,91.58c31.15-10.15,60.09-26.07,89.67-39.8,40.92-19,84.73-46,130.83-49.67,36.26-2.85,70.9,9.42,98.6,31.56,31.77,25.39,62.32,62,103.63,73,40.44,10.79,81.35-6.69,119.13-24.28s75.16-39,116.92-43.05c59.73-5.85,113.28,22.88,168.9,38.84,30.2,8.66,59,6.17,87.09-7.5,22.43-10.89,48-26.93,60.65-49.24V0Z" opacity=".5" class="shape-fill"></path>
+            <path d="M0,0V5.63C149.93,59,314.09,71.32,475.83,42.57c43-7.64,84.23-20.12,127.61-26.46,59-8.63,112.48,12.24,165.56,35.4C827.93,77.22,886,95.24,951.2,90c86.53-7,172.46-45.71,248.8-84.81V0Z" class="shape-fill"></path>
+        </svg>
+    </div>
+</section>
+<div class="spacer p200"></div>
+<div class="p-10" id="feature-container">
+    <section class="container py-16 transition-on-load max-w-8xl mx-auto" id="features">
+        <p class="font-bold text-center text-white mb-5">
+            <span class="feature-text text-3xl sm:text-4xl"></span>
+        </p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" id="feature-list">
+            <div class="transition-on-load">
+                <h1>Fast.</h1>
+                <p>Unmetered upload and download speeds along with NVMe storage provide an unparalleled experience.</p>
+            </div>
+            <div class="transition-on-load">
+                <h1>Reliable.</h1>
+                <p>With 99.99% uptime, you will be able to upload and view screenshots anytime, anywhere.</p>
+            </div>
+            <div class="transition-on-load">
+                <h1>Simple to use.</h1>
+                <p>Generate ShareX configs in just one click! No need to mess around with settings.</p>
+            </div>
+            <div class="transition-on-load">
+                <h1>And more!</h1>
+                <p>moo.ing is constantly in development and new features are being developed!</p>
+            </div>
+        </div>
+    </section>
+</div>
+<div class="bg-violet-300">
+    <section class="relative">
+        <div class="custom-shape-divider-2">
+            <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
+                <path d="M985.66,92.83C906.67,72,823.78,31,743.84,14.19c-82.26-17.34-168.06-16.33-250.45.39-57.84,11.73-114,31.07-172,41.86A600.21,600.21,0,0,1,0,27.35V120H1200V95.8C1132.19,118.92,1055.71,111.31,985.66,92.83Z" class="shape-fill"></path>
+            </svg>
+        </div>
+    </section>
+    <div class="spacer p300"></div>
+    <div class="container max-w-8xl mx-auto">
+        <p class="text-center font-bold text-white mb-5 text-3xl sm:text-4xl transition-on-load">Stats</p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-0 mx-3" id="stats">
+            <div class="transition-on-load rounded-lg md:rounded-none">
+                <h1>Users</h1>
+                <p id="users" class="animate-pulse h-2 mt-2"></p>
+            </div>
+            <div class="transition-on-load rounded-lg md:rounded-none">
+                <h1>Uploads</h1>
+                <p id="uploads" class="animate-pulse h-2 mt-2"></p>
+            </div>
+            <div class="transition-on-load rounded-lg md:rounded-none">
+                <h1>Storage used</h1>
+                <p id="storage" class="animate-pulse h-2 mt-2"></p>
+            </div>
+        </div>
+    </div>
+    <div class="spacer p200"></div>
+</div>
+</body>
+</html>
