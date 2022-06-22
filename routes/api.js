@@ -110,10 +110,14 @@ function getRouter({checkForDomain, getUser, query, saveFile, deleteFile}) {
         if (!id) return res.status(400).send({success: false, error: 'Bad Request'})
         let results = await query(`SELECT * FROM images WHERE fileId = ? AND ownerId = ? LIMIT 1`, [id, user.user.id])
         if (results.length === 0) return res.status(400).send({success: false, error: 'Image not found'})
+        let image = results[0]
         try {
-            await deleteFile(`${id}.${results[0].extension}`)
+            await deleteFile(`${id}.${image.extension}`)
         } catch {}
         await query(`DELETE FROM images WHERE fileId = ?`, [id])
+
+        await query(`UPDATE users SET upload_count = upload_count - 1, bytes_used = bytes_used - ? WHERE id = ?`, [parseInt(image.size), user.user.id])
+
         res.send({success: true})
     })
     /* api.get('/domains', async (req, res) => {
