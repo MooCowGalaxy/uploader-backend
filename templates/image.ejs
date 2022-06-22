@@ -2,7 +2,7 @@
 <html lang="en-US">
 <head>
     <title><%= `${image.fileId}.${image.extension} - ${humanReadableSize} - mooi.ng` %></title>
-    <%- include('models/header.ejs', {image: true, imageData: image, user, embedSettings}) %>
+    <%- include('models/header.ejs', {production, image: true, imageData: image, user, embedSettings}) %>
     <script>
         const creationTime = <%= image.timestamp %>;
         $(document).ready(() => {
