@@ -19,5 +19,8 @@
     <meta name="og:title" content="<%= embedSettings.title %>">
     <meta name="og:description" content="<%= embedSettings.description %>">
 <% } else if (image) { %>
+    <meta name="twitter:card" content="summary_large_image">
     <meta property="og:image" content="<%= `/raw/${imageData.fileId}.${imageData.extension}` %>">
+    <meta name="twitter:image" content="<%= `/raw/${imageData.fileId}.${imageData.extension}` %>">
+    <meta name="twitter:image:src" content="<%= `/raw/${imageData.fileId}.${imageData.extension}` %>">
 <% } %>
