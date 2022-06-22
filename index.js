@@ -79,7 +79,7 @@ async function resolvePlaceholders(text = "", user = {}, image = {}) {
     return newText
 }
 function checkForDomain(req, res, next) {
-    if (req.hostname !== 'mooi.ng' && config.production) return res.redirect('https://mooi.ng/')
+    if (req.hostname !== 'mooi.ng' && config.production) return res.redirect(`https://mooi.ng${req.originalUrl}`)
     next()
 }
 
