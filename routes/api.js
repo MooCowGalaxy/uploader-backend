@@ -128,6 +128,9 @@ function getRouter({checkForDomain, getUser, query, saveFile, deleteFile}) {
 
         await query(`UPDATE users SET upload_count = upload_count - 1, bytes_used = bytes_used - ? WHERE id = ?`, [parseInt(image.size), user.user.id])
 
+        global.totalFiles -= 1;
+        global.totalBytes -= parseInt(image.size);
+
         res.send({success: true})
     })
     /* api.get('/domains', async (req, res) => {
