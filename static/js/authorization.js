@@ -31,7 +31,7 @@ function escapeHtml(string) {
 }
 
 $(document).ready(() => {
-    $('#login-button').click(() => {
+    $('.login').click(() => {
         if (!isLoggedIn) {
             if (window.opener === null) {
                 window.open('/auth/login', '_blank', 'location=yes,height=750,width=500,scrollbars=yes,status=yes')

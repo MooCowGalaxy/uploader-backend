@@ -58,6 +58,9 @@ button {
 button:not(.accordion-button):not([disabled]):hover {
     transform: translateY(-0.125rem);
 }
+.bg-shape {
+    background-color: var(--gradient-color);
+}
 .theme-color {
     color: var(--theme-color);
 }
@@ -110,6 +113,15 @@ img {
 .spacer.p300 {
     height: 300px;
 }
+.spacer.p400 {
+    height: 400px;
+}
+.spacer.p500 {
+    height: 500px;
+}
+.flex-wrap-i {
+    flex-wrap: wrap !important;
+}
 .transition-on-load {
     opacity: 0;
     transform: translateY(50px);
@@ -143,12 +155,12 @@ span.bg-text-gradient-title {
     background-image: linear-gradient(62deg, #8EC5FC 0%, #E0C3FC 100%);
 }
 .feature-text::after {
-    color: white;
+    color: black;
     opacity: 1;
     transition: opacity ease-in-out 500ms;
     content: 'Features';
 }
-#feature-container {
+#stats-container {
     background-color: var(--gradient-color);
 }
 #feature-container:hover .feature-text::after {
@@ -184,13 +196,13 @@ span.bg-text-gradient-title {
     padding: 1rem 1.5rem;
 }
 #stats > div:nth-child(1) {
-    background-image: linear-gradient(270deg, rgba(126, 34, 206, 0.5) 0%, rgba(255, 255, 255, 0) 100%);
+    background-image: linear-gradient(270deg, rgb(40, 127, 156, 0.5) 0%, rgba(255, 255, 255, 0) 100%);
 }
 #stats > div:nth-child(2) {
-    background-image: linear-gradient(90deg, rgba(126, 34, 206, 0.5) 0%, rgba(126, 34, 206, 0.5) 100%);
+    background-image: linear-gradient(90deg, rgb(40, 127, 156, 0.5) 0%, rgb(40, 127, 156, 0.5) 100%);
 }
 #stats > div:nth-child(3) {
-    background-image: linear-gradient(90deg, rgba(126, 34, 206, 0.5) 0%, rgba(255, 255, 255, 0) 100%);
+    background-image: linear-gradient(90deg, rgb(40, 127, 156, 0.5) 0%, rgba(255, 255, 255, 0) 100%);
 }
 #stats > div > h1 {
     color: #f5f5f4;
@@ -207,28 +219,24 @@ span.bg-text-gradient-title {
 }
 @media(max-width: 768px) {
     #stats > div {
-        background-color: rgba(126, 34, 206, 0.35);
+        background-color: rgb(40, 127, 156, 0.25);
         background-image: none !important;
     }
 }
 #feature-list > div {
-    background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 100%);
     border-radius: 0.5rem;
     padding: 0.75rem 1rem;
-    transition: transform ease-in-out 0.25s;
-}
-#feature-list > div:hover {
-    transform: scale(1.05);
+    background-color: #e5e7eb
 }
 #feature-list > div > h1 {
-    color: white;
+    color: black;
     font-weight: bold;
     font-size: 1.5rem;
     line-height: 2rem;
 }
 #feature-list > div > p {
-    color: rgb(156 163 175);
-    font-size: 1rem;
+    color: #4b5563;
+    font-size: 1.15rem;
     line-height: 1.5rem;
 }
 /* #navbar-dropdown:focus > #navbar-dropdown-icon {

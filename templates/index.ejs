@@ -10,13 +10,73 @@
 <div class="container max-w-8xl mx-auto pt-10 sm:pt-14 md:pt-16 lg:pt-20 pb-5 px-5 relative">
     <section class="my-16 transition-on-load">
         <p class="font-bold text-white mb-2">
-            <b class="text-4xl sm:text-5xl md:text-6xl lg:text-7xl"><span class="gradient bg-text-gradient-logo">mooing</span></b>
+            <b class="text-5xl md:text-6xl lg:text-7xl"><span class="gradient bg-text-gradient-logo">mooing</span></b>
         </p>
         <p class="font-normal theme-color">
             <b class="text-2xl sm:text-3xl">A modern ShareX image host.</b>
         </p>
     </section>
 </div>
+<div class="spacer p200"></div>
+<div id="feature-container">
+    <div class="container max-w-6xl mx-auto px-6">
+        <p class="font-bold text-center text-black mb-6 md:mb-16 transition-on-load">
+            <span class="feature-text text-3xl sm:text-4xl md:text-5xl"></span>
+        </p>
+        <section class="relative d-flex-row flex-wrap-i transition-on-load mb-12 md:mb-20">
+            <div class="w-auto flex-none mb-2 order-2">
+                <img src="/static/img/speedometer.svg" alt="" class="hidden md:inline-block align-middle rounded-xl max-w-full max-h-28 sm:max-h-36 md:max-h-48 h-full w-full mx-auto">
+            </div>
+            <div class="flex-1 mb-0 mr-8 order-1">
+                <h1 class="text-blue-800 font-bold text-3xl mb-2">Bypass Discord upload limits</h1>
+                <p class="text-gray-600 text-lg">Instead of being confined to 8MB upload limits (without Nitro), upload files up to 100MB for <b>free</b>!</p>
+            </div>
+        </section>
+        <section class="relative d-flex-row flex-wrap-i transition-on-load mb-12 md:mb-20">
+            <div class="w-full md:w-auto flex-none mb-2 order-2 md:order-1">
+                <img src="https://mooi.ng/raw/WTwq8k2JW.png" alt="" class="shadow-xl rounded-xl md:hidden max-w-full">
+                <img src="https://mooi.ng/raw/7vtZZgBOz.png" alt="" class="shadow-xl rounded-xl hidden md:inline-block md:max-w-md lg:max-w-lg lg:max-w-xl 2xl:w-full">
+            </div>
+            <div class="flex-1 md:text-right order-1 md:order-2 mb-6 md:mb-0 md:ml-8">
+                <h1 class="text-blue-800 font-bold text-3xl mb-2">Fully featured control panel</h1>
+                <p class="text-gray-600 text-lg">Adjust every aspect of your images with just one click.<br>Change Discord embed settings, image domains, URL settings and more all from one page.</p>
+            </div>
+        </section>
+        <section class="relative d-flex-row flex-wrap-i transition-on-load mb-12 md:mb-20">
+            <div class="w-full md:w-auto flex-none mb-2 order-2">
+                <img src="https://mooi.ng/raw/80Ii06WSJ.png" alt="" class="shadow-xl rounded-xl md:hidden max-w-full">
+                <img src="https://mooi.ng/raw/8pEStj6p1.png" alt="" class="shadow-xl rounded-xl hidden md:inline-block md:max-w-md lg:max-w-lg lg:max-w-xl 2xl:w-full">
+            </div>
+            <div class="flex-1 order-1 mb-6 md:mb-0 md:mr-8">
+                <h1 class="text-blue-800 font-bold text-3xl mb-2">Custom embeds</h1>
+                <p class="text-gray-600 text-lg">Create custom embeds to show off your image! See how your embed will look while editing it.</p>
+            </div>
+        </section>
+        <div>
+            <h1 class="text-2xl font-semibold text-center mb-16 transition-on-load">There's more...</h1>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" id="feature-list">
+                <div class="transition-on-load">
+                    <h1>Custom subdomains.</h1>
+                    <p>Get a free subdomain on <b class="font-semibold">is-trolli.ng</b> and customize your image link!</p>
+                </div>
+                <div class="transition-on-load">
+                    <h1>Blazing fast.</h1>
+                    <p>Unmetered upload and download speeds along with NVMe storage provide an unparalleled experience.</p>
+                </div>
+                <div class="transition-on-load">
+                    <h1>Reliable.</h1>
+                    <p>With 99.99% uptime, you will be able to upload and view screenshots anytime, anywhere.</p>
+                </div>
+                <div class="transition-on-load">
+                    <h1>Simple to use.</h1>
+                    <p>Generate ShareX configs in just one click! No need to mess around with settings.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="spacer p200"></div>
 <section class="relative">
     <div class="custom-shape-divider">
         <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
@@ -27,32 +87,26 @@
     </div>
 </section>
 <div class="spacer p200"></div>
-<div class="p-10" id="feature-container">
-    <section class="container py-16 transition-on-load max-w-8xl mx-auto" id="features">
-        <p class="font-bold text-center text-white mb-5">
-            <span class="feature-text text-3xl sm:text-4xl"></span>
-        </p>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" id="feature-list">
-            <div class="transition-on-load">
-                <h1>Fast.</h1>
-                <p>Unmetered upload and download speeds along with NVMe storage provide an unparalleled experience.</p>
+<div class="p-10 bg-shape">
+    <div class="container max-w-8xl mx-auto transition-on-load">
+        <p class="text-center font-bold text-white mb-5 text-3xl sm:text-4xl">Stats</p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-0 mx-3" id="stats">
+            <div class="rounded-lg md:rounded-none">
+                <h1>Users</h1>
+                <p id="users" class="animate-pulse h-2 mt-2"></p>
             </div>
-            <div class="transition-on-load">
-                <h1>Reliable.</h1>
-                <p>With 99.99% uptime, you will be able to upload and view screenshots anytime, anywhere.</p>
+            <div class="rounded-lg md:rounded-none">
+                <h1>Uploads</h1>
+                <p id="uploads" class="animate-pulse h-2 mt-2"></p>
             </div>
-            <div class="transition-on-load">
-                <h1>Simple to use.</h1>
-                <p>Generate ShareX configs in just one click! No need to mess around with settings.</p>
-            </div>
-            <div class="transition-on-load">
-                <h1>And more!</h1>
-                <p>moo.ing is constantly in development and new features are being developed!</p>
+            <div class="rounded-lg md:rounded-none">
+                <h1>Storage used</h1>
+                <p id="storage" class="animate-pulse h-2 mt-2"></p>
             </div>
         </div>
-    </section>
+    </div>
 </div>
-<div class="bg-violet-300">
+<div class="bg-blue-100">
     <section class="relative">
         <div class="custom-shape-divider-2">
             <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
@@ -60,25 +114,12 @@
             </svg>
         </div>
     </section>
-    <div class="spacer p300"></div>
-    <div class="container max-w-8xl mx-auto">
-        <p class="text-center font-bold text-white mb-5 text-3xl sm:text-4xl transition-on-load">Stats</p>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-0 mx-3" id="stats">
-            <div class="transition-on-load rounded-lg md:rounded-none">
-                <h1>Users</h1>
-                <p id="users" class="animate-pulse h-2 mt-2"></p>
-            </div>
-            <div class="transition-on-load rounded-lg md:rounded-none">
-                <h1>Uploads</h1>
-                <p id="uploads" class="animate-pulse h-2 mt-2"></p>
-            </div>
-            <div class="transition-on-load rounded-lg md:rounded-none">
-                <h1>Storage used</h1>
-                <p id="storage" class="animate-pulse h-2 mt-2"></p>
-            </div>
-        </div>
+    <div class="spacer p400"></div>
+    <div class="text-center transition-on-load">
+        <h1 class="text-3xl mb-2"><span class="text-bright-cyan gradient font-bold">Start sharing today!</span></h1>
+        <button class="px-4 py-2 rounded-md bg-sky-500 text-white font-semibold login">Log In</button>
     </div>
-    <div class="spacer p200"></div>
+    <div class="spacer p300"></div>
 </div>
 </body>
 </html>
