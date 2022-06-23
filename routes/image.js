@@ -27,8 +27,6 @@ function getRouter({query, resolvePlaceholders}) {
         await query(`UPDATE images SET viewCount = viewCount + 1 WHERE fileId = ?`, [result.fileId])
         result.viewCount++;
 
-        res.header("Access-Control-Allow-Origin", "*")
-
         let user = global.userCache[result.ownerId]
         if (!user || user.lastUpdated < (Date.now() - 1000 * 60 * 5)) {
             let results = await query(`SELECT * FROM users WHERE id = ?`, [result.ownerId])

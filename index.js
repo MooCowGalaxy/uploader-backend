@@ -64,6 +64,7 @@ async function resolvePlaceholders(text = "", user = {}, image = {}) {
     return newText
 }
 function checkForDomain(req, res, next) {
+    console.log(req.hostname)
     if (req.hostname !== config.mainDomain && config.production) return res.redirect(`https://${config.mainDomain}${req.originalUrl}`)
     next()
 }
