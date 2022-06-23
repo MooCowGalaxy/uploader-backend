@@ -10,6 +10,7 @@ function getRouter({query, checkForDomain, getUser}) {
     mainRouter.use(checkForDomain)
 
     mainRouter.get('/', async (req, res) => {
+        console.log('h')
         res.send(await renderFile('index'))
     })
     mainRouter.get(/^\/dashboard(\/[a-zA-Z0-9\/]*)?$/, async (req, res) => {
