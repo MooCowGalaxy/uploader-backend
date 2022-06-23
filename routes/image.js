@@ -18,10 +18,10 @@ function getRouter({query, resolvePlaceholders}) {
         let fileName = `${result.fileId}.${result.extension}`
 
         if (!(['png', 'jpg', 'gif'].includes(`${result.extension}`))) {
-            return res.sendFile(path.resolve(`${config.savePath}/${fileName}`))
+            return res.sendFile(path.resolve(`${config.production ? config.savePathProd : config.savePathTest}/${fileName}`))
         }
         if (result.width === null) {
-            let dimensions = sizeOfImage(`${config.savePath}/${result.fileId}.${result.extension}`)
+            let dimensions = sizeOfImage(`${config.production ? config.savePathProd : config.savePathTest}/${result.fileId}.${result.extension}`)
             await query(`UPDATE images SET width = ?, height = ? WHERE fileId = ?`, [dimensions.width, dimensions.height, result.fileId])
         }
         await query(`UPDATE images SET viewCount = viewCount + 1 WHERE fileId = ?`, [result.fileId])

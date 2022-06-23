@@ -1,8 +1,8 @@
 const express = require('express')
 const oauth = require('./util/discordAuth')
-const {renderFile, humanReadableBytes} = require('./util/functions')
-const {setupCache, addCacheFile, getCacheFile} = require('./util/cacher')
-const {uploadFile, downloadFile, deleteFile} = require('./util/storage')
+const {humanReadableBytes} = require('./util/functions')
+const {setupCache, addCacheFile} = require('./util/cacher')
+const {uploadFile, deleteFile} = require('./util/storage')
 const sizeOfImage = require('image-size')
 const path = require('path')
 const nodeSchedule = require('node-schedule')
@@ -42,26 +42,11 @@ process.on('unhandledRejection', reason => {
     console.error(reason.stack)
 })
 
-const uploadQueue = []
-
 // TODO: implement upload queue
 
 async function saveFile(fileName, buffer) {
     await uploadFile(fileName, buffer)
     if (storageType === 'minio') await addCacheFile(fileName, buffer)
-}
-async function getFile(fileName) {
-    if (storageType === 'minio') {
-        let buffer = await getCacheFile(fileName)
-        if (buffer === null) {
-            buffer = await downloadFile(fileName)
-            if (buffer === null) return null;
-            await addCacheFile(fileName, buffer)
-            return buffer
-        } else return buffer
-    } else {
-        return await downloadFile(fileName)
-    }
 }
 async function resolvePlaceholders(text = "", user = {}, image = {}) {
     let newText = text;
@@ -71,7 +56,7 @@ async function resolvePlaceholders(text = "", user = {}, image = {}) {
     newText = newText.replaceAll('[name]', `${image.fileId}.${image.extension}`)
     if (newText.includes("[dimensions]")) {
         if (image.width === null) {
-            let dimensions = sizeOfImage(`${config.savePath}/${image.fileId}.${image.extension}`)
+            let dimensions = sizeOfImage(`${config.production ? config.savePathProd : config.savePathTest}/${image.fileId}.${image.extension}`)
             await query(`UPDATE images SET width = ?, height = ? WHERE fileId = ?`, [dimensions.width, dimensions.height, image.fileId])
         }
         newText = newText.replaceAll('[dimensions]', `${image.width} x ${image.height}`)
@@ -79,7 +64,7 @@ async function resolvePlaceholders(text = "", user = {}, image = {}) {
     return newText
 }
 function checkForDomain(req, res, next) {
-    if (req.hostname !== 'mooi.ng' && config.production) return res.redirect(`https://mooi.ng${req.originalUrl}`)
+    if (req.hostname !== config.mainDomain && config.production) return res.redirect(`https://${config.mainDomain}${req.originalUrl}`)
     next()
 }
 

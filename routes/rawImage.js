@@ -34,7 +34,7 @@ function getRouter({query, getFile}) {
             }
         } else {
             try {
-                res.sendFile(`${config.savePath}/${fileName}`)
+                res.sendFile(`${config.production ? config.savePathProd : config.savePathTest}/${fileName}`)
             } catch {
                 res.status(404).send(await renderFile('notFound'))
             }

@@ -26,7 +26,7 @@ if (config.storageType === 'minio') {
 } else if (config.storageType === 'local') {
     module.exports = {
         async uploadFile(fileName, buffer) {
-            await fs.promises.writeFile(`${config.savePath}/${fileName}`, buffer)
+            await fs.promises.writeFile(`${config.production ? config.savePathProd : config.savePathTest}/${fileName}`, buffer)
         },
         async downloadFile(fileName) {
             try {
@@ -36,7 +36,7 @@ if (config.storageType === 'minio') {
             }
         },
         async deleteFile(fileName) {
-            return await fs.promises.rm(`${config.savePath}/${fileName}`)
+            return await fs.promises.rm(`${config.production ? config.savePathProd : config.savePathTest}/${fileName}`)
         }
     }
 }

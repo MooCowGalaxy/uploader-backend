@@ -170,13 +170,13 @@ function getRouter({checkForDomain, getUser, query, saveFile, deleteFile}) {
     api.get('/config/sharex', async (req, res) => {
         const user = await getUser(req)
         if (!user) return res.status(401).send({success: false, error: 'Unauthorized'})
-        res.setHeader('Content-Disposition', 'attachment; filename=mooing.sxcu')
+        res.setHeader('Content-Disposition', 'attachment; filename=uploader.tech.sxcu')
         res.send({
             Version: "13.7.0",
-            Name: "mooi.ng image uploader",
+            Name: "uploader.tech image uploader",
             DestinationType: "ImageUploader, FileUploader",
             RequestMethod: "POST",
-            RequestURL: "https://mooi.ng/api/upload",
+            RequestURL: "https://uploader.tech/api/upload",
             Headers: {
                 key: user.user.api_key
             },

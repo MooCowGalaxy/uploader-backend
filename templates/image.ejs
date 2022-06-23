@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-US">
 <head>
-    <title><%= `${image.fileId}.${image.extension} - ${humanReadableSize} - mooi.ng` %></title>
+    <title><%= `${image.fileId}.${image.extension} - ${humanReadableSize} - uploader.tech` %></title>
     <%- include('models/header.ejs', {production, image: true, imageData: image, user, embedSettings}) %>
     <script>
         const creationTime = <%= image.timestamp %>;
@@ -21,7 +21,7 @@
         <p class="text-center text-md lg:text-lg font-normal mb-1">Uploaded by <b style="color: <%= user.settings.color ? user.settings.color : '#fff' %>" class="font-semibold"><%= user.username %></b> at <b id="time" class="text-amber-600 font-semibold"><%= new Date(image.timestamp).toUTCString() %></b></p>
         <p class="text-center text-sm lg:text-md mb-3 font-normal">Dimensions: <b class="text-lime-600 font-semibold"><%= `${image.width} x ${image.height}` %></b> | Size: <b class="text-lime-600 font-semibold"><%= `${humanReadableSize}` %></b> | Viewed <b class="text-lime-600 font-semibold"><%= image.viewCount %></b> time<%= image.viewCount === 1 ? '' : 's' %></p>
         <hr class="border-gray-300 mb-3">
-        <p class="text-center text-sm lg:text-md font-normal"><a href="/" class="text-sky-500 underline hover:text-sky-600">mooi.ng</a> private image host</p>
+        <p class="text-center text-sm lg:text-md font-normal"><a href="/" class="text-sky-500 underline hover:text-sky-600">Uploader</a> image host</p>
     </div>
 </div>
 </body>

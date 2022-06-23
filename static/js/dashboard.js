@@ -208,7 +208,7 @@ const pages = {
                             plugins: {
                                 title: {
                                     display: true,
-                                    text: 'moo.ing statistics'
+                                    text: 'uploader.tech statistics'
                                 }
                             },
                             stacked: false,
@@ -288,7 +288,7 @@ const pages = {
             </div>
             <div class="list-item">
                 <p>2.</p>
-                <div>Download your generated ShareX config <a href="/api/config/sharex" class="link" target="_blank" rel="noopener noreferrer">here</a> and open it. Click "yes" to make mooi.ng the default custom uploader.</div>
+                <div>Download your generated ShareX config <a href="/api/config/sharex" class="link" target="_blank" rel="noopener noreferrer">here</a> and open it. Click "yes" to make uploader.tech the default custom uploader.</div>
             </div>
             <div class="list-item">
                 <p>3.</p>
@@ -300,7 +300,7 @@ const pages = {
             </div>
             <div class="list-item">
                 <p>5.</p>
-                <div>Done! You can now start sharing screenshots through mooi.ng. You can also customize your mooi.ng experience by changing <a href="/dashboard/embed" class="link">embed</a> or <a href="/dashboard/domains" class="link">domain</a> settings.</div>
+                <div>Done! You can now start sharing screenshots through uploader.tech. You can also customize your uploader.tech experience by changing <a href="/dashboard/embed" class="link">embed</a> or <a href="/dashboard/domains" class="link">domain</a> settings.</div>
             </div>
         </div>
     </div>
@@ -888,7 +888,7 @@ const pages = {
         html: `
         <div class="content">
             <h1>Rules</h1> 
-            <p class="mb-2">By using mooi.ng, you agree to abiding by the rules listed below. These rules are not exhaustive, and actions are ultimately up to staff discretion.</p>
+            <p class="mb-2">By using uploader.tech, you agree to abiding by the rules listed below. These rules are not exhaustive, and actions are ultimately up to staff discretion.</p>
             <ol class="list-decimal ml-10 mb-2">
                 <li>Do not upload NSFW content or gore to the service.</li>
                 <li>Do not upload content that illustrates/portrays illegal activities.</li>
