@@ -304,9 +304,9 @@ const pages = {
             </div>
         </div>
     </div>
-    <div class="content">
-        <h1>Statistics</h1>
-        <div class="max-h-120">
+    <div class="content d-flex-col">
+        <h1 class="flex-initial">Statistics</h1>
+        <div class="max-h-full flex-1">
             <canvas id="page-home-chart" class="w-full h-full"></canvas>
         </div>
     </div>
