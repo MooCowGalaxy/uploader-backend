@@ -12,7 +12,6 @@ function getRouter({query, getFile}) {
     const rawImageRouter = express.Router()
 
     rawImageRouter.get('/:id', async (req, res) => {
-        if (config.production && req.hostname !== 'mooi.ng') return res.redirect(`https://mooi.ng${req.originalUrl}`)
         let fileName = req.params.id
         let fileId = fileName.split('.').slice(0, -1).join(".")
 
