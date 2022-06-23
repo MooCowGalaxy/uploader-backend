@@ -9,7 +9,7 @@ const namespace = '/'
 function getRouter({query, resolvePlaceholders}) {
     const imageRouter = express.Router()
     imageRouter.get('/i/:id', async (req, res, next) => {
-        if (req.hostname !== 'mooi.ng' && config.production) return next();
+        if (req.hostname !== config.mainDomain && config.production) return next();
         const fileId = req.params.id
 
         let results = await query(`SELECT * FROM images WHERE fileId = ?`, [fileId])
@@ -58,7 +58,7 @@ function getRouter({query, resolvePlaceholders}) {
     })
 
     imageRouter.get('/:id', async (req, res, next) => {
-        if (req.hostname === 'mooi.ng' && config.production) return next();
+        if (req.hostname === config.mainDomain && config.production) return next();
 
         let fileAlias = req.params.id;
         if (fileAlias.includes('/')) return next();
@@ -70,7 +70,7 @@ function getRouter({query, resolvePlaceholders}) {
         if (results.length === 0) return res.status(404).send(await renderFile('notFound'))
         let result = results[0]
 
-        res.redirect(`${config.production ? 'https://mooi.ng' : ''}/i/${result.fileId}`)
+        res.redirect(`${config.production ? `https://${config.mainDomain}` : ''}/i/${result.fileId}`)
     })
 
     return imageRouter
