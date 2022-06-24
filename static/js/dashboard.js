@@ -676,7 +676,7 @@ const pages = {
                         <img src="/static/img/SXL.png" alt="" class="max-h-28 sm:max-h-36 md:max-h-48 xl:max-h-64 object-contain w-auto max-w-full">
                     </div>
                 </div>
-                <div id="embed-image-only" class="max-w-3xl hidden"><img src="/static/img/SXL.png" alt=""></div>
+                <div id="embed-image-only" class="max-w-3xl hidden"><img src="/static/img/SXL.png" alt="" class="max-h-28 sm:max-h-36 md:max-h-48 xl:max-h-64 object-contain w-auto max-w-full"></div>
             </div>
         </div>
         <p class="text-red-600" id="page-embed-embed-error"></p>
