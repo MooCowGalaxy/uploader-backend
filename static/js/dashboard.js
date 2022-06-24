@@ -874,7 +874,7 @@ const pages = {
         </div>
     </div>
     <p class="mb-1 text-red-600" id="page-domains-error"></p>
-    <button id="page-domains-save" class="bg-green-300 px-4 py-2 rounded-md mb-3 disabled:opacity-75" disabled>Save</button>
+    <button id="page-domains-save" class="bg-green-300 px-4 py-2 rounded-md mb-3 disabled:opacity-75 disabled:bg-gray-300" disabled>Save</button>
     <p>More options will be available in the future!</p>
 </div>
 `
