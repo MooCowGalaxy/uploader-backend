@@ -20,7 +20,7 @@ function consumeRatelimit(path, userId) {
         if (ratelimits[path] === undefined) return null
         ratelimits[path].consume(userId)
             .then(resolve)
-            .reject(reject)
+            .catch(reject)
     })
 }
 
