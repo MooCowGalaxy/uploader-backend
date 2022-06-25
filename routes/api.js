@@ -355,7 +355,7 @@ function getRouter({checkForDomain, getUser, prisma, saveFile, deleteFile}) {
                 width: dimensions.width,
                 height: dimensions.height,
                 domain: user.domain,
-                alias: fileAlias
+                alias: user.settings.linkType === 2 ? decodeZWSString(fileAlias) : fileAlias
             }
         })
         global.totalFiles++;

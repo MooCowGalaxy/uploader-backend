@@ -90,7 +90,6 @@ function getRouter({prisma, resolvePlaceholders}) {
         if (fileAlias.includes('/')) return next();
         if (fileAlias.startsWith('dashboard')) return next();
         if (isZWSString(fileAlias)) fileAlias = encodeZWSString(fileAlias)
-        console.log(fileAlias)
         let result;
 
         if (config.production) result = await prisma.image.findFirst({where: {alias: fileAlias, domain: req.hostname}})
