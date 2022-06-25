@@ -50,9 +50,9 @@ function openModal({title, description, iconColor, iconSVG, buttons}) {
 
     $('#modal').addClass('visible')
 }
-function unsavedChangesModal({onDiscard, onSaveChanges} = {}) {
+function unsavedChangesModal({onDiscard, onGoBack} = {}) {
     onModalButton1Click = [onDiscard]
-    onModalButton2Click = [onSaveChanges]
+    onModalButton2Click = [onGoBack]
     if (isSmall()) closeSidebar()
     openModal({
         title: 'You have unsaved changes!',
@@ -61,8 +61,8 @@ function unsavedChangesModal({onDiscard, onSaveChanges} = {}) {
         iconSVG: `<svg class="h-8 w-8 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
                   </svg>`,
-        buttons: `<button id="modal-button-1" onclick="modalButton1Click()" class="px-3 py-2 rounded-lg border border-red-600">Discard</button>
-                  <button id="modal-button-2" onclick="modalButton2Click()" class="px-3 py-2 bg-green-400 rounded-lg font-semibold">Save</button>`
+        buttons: `<button id="modal-button-1" onclick="modalButton1Click()" class="px-3 py-2 rounded-lg border border-red-600">Discard Changes</button>
+                  <button id="modal-button-2" onclick="modalButton2Click()" class="px-3 py-2 bg-green-400 rounded-lg font-semibold">Return</button>`
     })
 }
 function openSidebar() {
@@ -167,8 +167,8 @@ const pages = {
                     for (let row of data) {
                         times.push(new Date(parseInt(row.timestamp) * 1000).toString().split(' ').slice(1, 5).join(' '))
                         users.push(row.users)
-                        bytes.push(Math.round(row.bytes_used / 10000) / 100)
-                        images.push(row.images_uploaded)
+                        bytes.push(Math.round(row.bytesUsed / 10000) / 100)
+                        images.push(row.imagesUploaded)
                     }
                     const ctx = document.getElementById(`page-home-chart`)
                     new Chart(ctx, {
@@ -377,9 +377,9 @@ const pages = {
                               <button id="modal-button-2" onclick="modalButton2Click()" class="px-3 py-2 rounded-lg bg-red-300 disabled:opacity-75">Regenerate</button>`
                 })
             })
-            $('#page-user-link-type').val(user.user.linkType)
+            $('#page-user-link-type').val(user.user.settings.linkType)
             $('#page-user-link-type').on('input', () => {
-                if ($('#page-user-link-type').val() === user.user.linkType.toString()) {
+                if ($('#page-user-link-type').val() === user.user.settings.linkType.toString()) {
                     $('#page-user-save-link').prop('disabled', true)
                     return
                 }
@@ -455,7 +455,7 @@ const pages = {
         onLoad: () => {
             $('#pfp').html(`<img class="rounded-full w-12 h-12" src="${user.data.avatar ? `https://cdn.discordapp.com/avatars/${user.data.id}/${user.data.avatar}.png?size=64` : ''}" alt="">`)
             $('#page-embed-username').text(user.data.username)
-            $('#embed-preview-link').text(`https://${user.user.domain}/${user.user.linkType === 0 ? 'aBcD1234.png' : ''}`)
+            $('#embed-preview-link').text(`https://${user.user.domain}/${user.user.settings.linkType === 0 ? 'aBcD1234.png' : ''}`)
             let original;
             function setButtonStatus(enabled = false) {
                 $('#page-embed-save').prop('disabled', !enabled)
@@ -479,12 +479,12 @@ const pages = {
                 return newText
             }
             function embedHasChanges() {
-                if ($('#page-embed-embed-toggle').prop('checked') !== original.embed?.enabled) return true
-                if ($('#page-embed-input-site-name').val() !== original.embed?.siteName) return true
-                if ($('#page-embed-input-title').val() !== original.embed?.title) return true
-                if ($('#page-embed-input-description').val() !== original.embed?.description) return true
-                if ($('#page-embed-input-color').val() !== original.color) return true
-                return false
+                if ($('#page-embed-embed-toggle').prop('checked') !== original.embedEnabled) return true
+                if ($('#page-embed-input-site-name').val() !== original.embedSiteName) return true
+                if ($('#page-embed-input-title').val() !== original.embedSiteTitle) return true
+                if ($('#page-embed-input-description').val() !== original.embedSiteDescription) return true
+                return $('#page-embed-input-color').val() !== original.embedColor;
+
             }
             $('#page-embed-save').click(() => {
                 if (getError()) return;
@@ -558,11 +558,11 @@ const pages = {
                     error: console.error,
                     success: (data) => {
                         if (data.success) {
-                            $('#page-embed-embed-toggle').prop('checked', !!data.data.embed?.enabled)
-                            $('#page-embed-input-site-name').val(data.data.embed?.siteName !== undefined ? data.data.embed.siteName : '')
-                            $('#page-embed-input-title').val(data.data.embed?.title !== undefined ? data.data.embed.title : '')
-                            $('#page-embed-input-description').val(data.data.embed?.description !== undefined ? data.data.embed.description : '')
-                            $('#page-embed-input-color').val(data.data.color !== undefined ? data.data.color : '#000000')
+                            $('#page-embed-embed-toggle').prop('checked', data.data.embedEnabled)
+                            $('#page-embed-input-site-name').val(data.data.embedSiteName)
+                            $('#page-embed-input-title').val(data.data.embedSiteTitle)
+                            $('#page-embed-input-description').val(data.data.embedSiteDescription)
+                            $('#page-embed-input-color').val(data.data.embedColor)
                             original = data.data
                             updateEmbed()
                         }
@@ -579,11 +579,10 @@ const pages = {
                                 closeModal()
                                 resolve(true)
                             },
-                            onSaveChanges: () => {
-                                $('#page-embed-save').click()
+                            onGoBack: () => {
                                 setTimeout(() => {
                                     closeModal()
-                                    resolve(true)
+                                    resolve(false)
                                 }, 250)
                             }
                         })
@@ -908,7 +907,6 @@ function handlePathCode(path) {
         function changePage() {
             beforePageChangeHook = undefined;
             route = page
-            changes = {}
             $('.page-visible').html('');
             $('.page-visible').removeClass('page-visible')
             $(`#page-${page}`).addClass('page-visible')

@@ -1,0 +1,69 @@
+model User {
+  id           Int    @id @default(autoincrement())
+  username     String @db.VarChar(255)
+  discord      BigInt
+  apiKey       String @db.VarChar(20) @map("api_key")
+  settings     String @default("{}") @db.Text
+  domain       String @default("is-trolli.ng") @db.VarChar(20)
+  storageQuota Int    @default(10) @map("storage_quota")
+  uploadLimit  Int    @default(100) @map("upload_limit")
+  uploadCount  Int    @default(0) @map("upload_count")
+  bytesUsed    BigInt @default(0) @map("bytes_used")
+  tag          String @db.VarChar(255)
+  linkType     Int    @default(0) @map("link_type")
+  created      BigInt @default(0)
+  domains      Domain[]
+  images       Image[]
+}
+
+model Image {
+  id           Int     @id @default(autoincrement())
+  fileId       String  @db.VarChar(255)
+  originalName String  @db.Text
+  size         BigInt
+  timestamp    BigInt?
+  extension    String  @db.VarChar(10)
+  viewCount    Int     @default(0)
+  owner        User    @relation(fields: [ownerId], references: [id])
+  ownerId      Int
+  width        Int?
+  height       Int?
+  domain       String  @default("is-trolli.ng") @db.VarChar(255)
+  alias        String? @db.VarChar(255)
+}
+
+model Stats {
+  timestamp      BigInt @id
+  users          Int
+  bytesUsed      BigInt @map("bytes_used")
+  imagesUploaded BigInt @map("images_uploaded")
+}
+
+model Domain {
+  id      Int     @id @default(autoincrement())
+  domain  String  @db.VarChar(255)
+  owner   User    @relation(fields: [ownerId], references: [id])
+  ownerId Int
+  public  Boolean
+  created BigInt
+  subdomains Subdomain[]
+}
+
+model Subdomain {
+  id        Int    @id @default(autoincrement())
+  domain    Domain @relation(fields: [domainId], references: [id])
+  domainId  Int
+  subdomain String @db.VarChar(20)
+  owner     User   @relation(fields: [ownerId], references: [id])
+  ownerId   Int
+}
+
+model Token {
+  id           Int    @id @default(autoincrement())
+  userId       BigInt @map("user_id")
+  token        String @db.Text
+  bearerToken  String @db.Text @map("bearer_token")
+  expires      Int
+  cache        String @db.Text
+  last_updated Int
+}

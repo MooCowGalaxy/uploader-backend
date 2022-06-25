@@ -6,7 +6,7 @@ const {uploadFile, deleteFile} = require('./util/storage')
 const sizeOfImage = require('image-size')
 const path = require('path')
 const nodeSchedule = require('node-schedule')
-const mysql = require('mysql2')
+const {PrismaClient} = require('@prisma/client')
 const fs = require('fs')
 
 const config = require('./config.json')
@@ -23,10 +23,8 @@ global.userCache = {} // {userId: {data: RowResult, lastUpdated: Date.now()}}
 const storageType = config.storageType
 if (storageType === 'minio') setupCache().then(() => console.log('Cache set up successfully.'))
 
-const pool = mysql.createPool(config.database)
-
-const {query} = require('./util/database')(pool)
-const {getUser} = require('./util/authFunctions')(pool)
+const prisma = new PrismaClient()
+const {getUser} = require('./util/authFunctions')(prisma)
 
 app.use(express.json())
 
@@ -35,7 +33,7 @@ app.use('/dist', express.static('dist'))
 app.get('/dist/tw/index.min.js', (req, res) => {
     res.sendFile(path.resolve('./node_modules/tw-elements/dist/js/index.min.js'))
 })
-app.use('/auth', oauth(pool))
+app.use(oauth.namespace, oauth.getRouter({prisma}))
 
 process.on('unhandledRejection', reason => {
     console.error(`Unhandled rejection: ${reason}`)
@@ -57,7 +55,15 @@ async function resolvePlaceholders(text = "", user = {}, image = {}) {
     if (newText.includes("[dimensions]")) {
         if (image.width === null) {
             let dimensions = sizeOfImage(`${config.production ? config.savePathProd : config.savePathTest}/${image.fileId}.${image.extension}`)
-            await query(`UPDATE images SET width = ?, height = ? WHERE fileId = ?`, [dimensions.width, dimensions.height, image.fileId])
+            await prisma.image.update({
+                where: {
+                    fileId: image.fileId
+                },
+                data: {
+                    width: dimensions.width,
+                    height: dimensions.height
+                }
+            })
         }
         newText = newText.replaceAll('[dimensions]', `${image.width} x ${image.height}`)
     }
@@ -71,7 +77,7 @@ function checkForDomain(req, res, next) {
 const options = {
     checkForDomain,
     getUser,
-    query,
+    prisma,
     saveFile,
     resolvePlaceholders,
     deleteFile,
@@ -111,7 +117,7 @@ for (let middleware of afterMiddleware) {
 }
 
 for (let file of fs.readdirSync('./tasks')) {
-    const task = require(`./tasks/${file}`)(query)
+    const task = require(`./tasks/${file}`)(prisma)
     nodeSchedule.scheduleJob(task.time, task.task)
     taskCount++
 }
@@ -120,13 +126,25 @@ console.log(`Loaded ${middlewareCount} middleware functions, ${routeCount} route
 
 app.listen(config.port, () => {
     console.log(`Image server running at port ${config.port}.`)
-    query(`SELECT SUM(size) AS total FROM images`).then(r => {
-        global.totalBytes += parseInt(r[0].total)
+    prisma.image.aggregate({
+        _sum: {
+            size: true
+        }
+    }).then(r => {
+        global.totalBytes += parseInt(r._sum.size)
     })
-    query(`SELECT COUNT(*) AS total FROM images`).then(r => {
-        global.totalFiles += parseInt(r[0].total)
+    prisma.image.aggregate({
+        _count: {
+            size: true
+        }
+    }).then(r => {
+        global.totalFiles += parseInt(r._count.size)
     })
-    query(`SELECT COUNT(*) AS total FROM users`).then(r => {
-        global.totalUsers += parseInt(r[0].total)
+    prisma.user.aggregate({
+        _count: {
+            id: true
+        }
+    }).then(r => {
+        global.totalUsers += parseInt(r._count.id)
     })
 })

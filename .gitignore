@@ -3,3 +3,4 @@
 config.json
 /dist/output.css
 /logs
+.env

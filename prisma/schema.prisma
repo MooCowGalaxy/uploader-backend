@@ -1,0 +1,92 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int        @id @default(autoincrement())
+  username     String     @db.VarChar(255)
+  discordId    BigInt     @unique
+  discordTag   String     @db.VarChar(255)
+  apiKey       String     @db.VarChar(20)
+  settings     Settings?
+  domain       String     @default("is-trolli.ng") @db.VarChar(20)
+  storageQuota Int        @default(10) // GB
+  uploadLimit  Int        @default(100) // MB
+  uploadCount  Int        @default(0)
+  bytesUsed    BigInt     @default(0)
+  createdAt    BigInt
+  domains      Domain[]
+  images       Image[]
+  Subdomain    Subdomain?
+  Token        Token[]
+}
+
+model Settings {
+  id                   Int     @id @default(autoincrement())
+  user                 User    @relation(fields: [userId], references: [id])
+  userId               Int     @unique
+  linkType             Int     @default(0)
+  embedSiteName        String  @default("") @db.VarChar(255)
+  embedSiteTitle       String  @default("") @db.VarChar(255)
+  embedSiteDescription String  @default("") @db.VarChar(500)
+  embedColor           String  @default("#000000") @db.VarChar(7)
+  embedEnabled         Boolean @default(false)
+}
+
+model Image {
+  id           Int     @id @default(autoincrement())
+  fileId       String  @db.VarChar(255) @unique
+  originalName String  @db.Text
+  size         BigInt
+  timestamp    BigInt
+  extension    String  @db.VarChar(10)
+  viewCount    Int     @default(0)
+  owner        User    @relation(fields: [ownerId], references: [id])
+  ownerId      Int
+  width        Int?
+  height       Int?
+  domain       String  @default("is-trolli.ng") @db.VarChar(255)
+  alias        String? @db.VarChar(255)
+}
+
+model Stats {
+  timestamp      BigInt @id
+  users          Int
+  bytesUsed      BigInt
+  imagesUploaded BigInt
+}
+
+model Domain {
+  id         Int         @id @default(autoincrement())
+  domain     String      @db.VarChar(255) @unique
+  owner      User        @relation(fields: [ownerId], references: [id])
+  ownerId    Int
+  public     Boolean
+  created    BigInt
+  subdomains Subdomain[]
+}
+
+model Subdomain {
+  id         Int    @id @default(autoincrement())
+  domain     Domain @relation(fields: [domainName], references: [domain])
+  domainName String @db.VarChar(255)
+  subdomain  String @db.VarChar(20)
+  owner      User   @relation(fields: [ownerId], references: [id])
+  ownerId    Int    @unique
+}
+
+model Token {
+  id          Int    @id @default(autoincrement())
+  user        User   @relation(fields: [userId], references: [discordId])
+  userId      BigInt // discord ID
+  token       String @db.VarChar(255) @unique
+  bearerToken String @db.Text
+  expires     Int
+  cache       String @db.Text
+  lastUpdated Int
+}

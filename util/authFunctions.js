@@ -9,13 +9,41 @@ const oauth = new discordOauth2({
     version: config.discord.version
 })
 
-module.exports = (pool) => {
-    const {query} = require('./database')(pool)
-
+module.exports = (prisma) => {
     async function getUserData(accessToken) {
         try {
-            return await oauth.getUser(accessToken)
-        } catch {
+            let user = await oauth.getUser(accessToken)
+            let tag = `${user.username}#${user.discriminator}`
+            let now = Date.now()
+            let u = await prisma.user.upsert({
+                where: {
+                    discordId: BigInt(user.id)
+                },
+                update: {
+                    username: tag,
+                    discordTag: tag
+                },
+                create: {
+                    username: tag,
+                    discordId: BigInt(user.id),
+                    discordTag: tag,
+                    apiKey: createTokenString(20),
+                    settings: {
+                        create: {}
+                    },
+                    createdAt: now
+                },
+                include: {
+                    settings: true
+                }
+            })
+            if (u.createdAt === now) {
+                global.totalUsers++
+            }
+            return user
+        } catch (e) {
+            console.error(e)
+            console.error(e.stack)
             return null
         }
     }
@@ -24,35 +52,40 @@ module.exports = (pool) => {
         const cookies = getCookie(req)
         if (!cookies.token) return null
         const token = cookies.token
-        let q = await query(`SELECT * FROM tokens WHERE token = ?`, [token])
-        if (q.length === 0) return null
-        let u = q[0]
+        let u = await prisma.token.findUnique({
+            where: {
+                token
+            }
+        })
+        if (u === null) return null
         if (u.expires < Math.floor(Date.now() / 1000)) {
-            await query(`DELETE FROM tokens WHERE id = ?`, [u.id])
+            await prisma.token.delete({where: {token}})
             return null
         }
-        if (u.last_updated + config.discord.userCacheThreshold < Math.floor(Date.now() / 1000)) {
-            let data = await getUserData(u.bearer_token)
+        if (u.lastUpdated + config.discord.userCacheThreshold < Math.floor(Date.now() / 1000)) {
+            let data = await getUserData(u.bearerToken)
             if (!data) {
-                await query(`DELETE FROM tokens WHERE id = ?`, [u.id])
+                await prisma.token.delete({where: {token}})
                 return null
             }
-            await query(`UPDATE tokens SET cache = ?, last_updated = ? WHERE id = ?`, [JSON.stringify(data), Math.floor(Date.now() / 1000), u.id])
+            await prisma.token.update({
+                where: {
+                    id: u.id
+                },
+                data: {
+                    cache: JSON.stringify(data),
+                    lastUpdated: Math.floor(Date.now() / 1000)
+                }
+            })
             u.cache = JSON.stringify(data)
             u.lastUpdated = Math.floor(Date.now() / 1000)
         }
         let cache = JSON.parse(u.cache)
-        let userData;
-        let result = await query(`SELECT * FROM users WHERE discord = ?`, [u.user_id])
-        if (result.length > 0) {
-            userData = result[0]
-        } else {
-            await query(`INSERT INTO users (username, discord, api_key, tag, created) VALUES (?, ?, ?, ?, ?)`, [`${cache.username}#${cache.discriminator}`, cache.id, createTokenString(20), `${cache.username}#${cache.discriminator}`, Date.now()])
-            global.totalUsers++;
-            userData = (await query(`SELECT * FROM users WHERE discord = ?`, [u.user_id]))[0]
-        }
-        userData.settings = JSON.parse(userData.settings)
-        return {userId: u.user_id, data: cache, user: userData}
+        let userData = await prisma.user.findUnique({
+            where: {discordId: u.userId},
+            include: {settings: true}
+        })
+        return {userId: u.userId, data: cache, user: userData}
     }
 
     function generateURL() {
@@ -64,13 +97,12 @@ module.exports = (pool) => {
 
     async function getBearerToken(code) {
         try {
-            let data = await oauth.tokenRequest({
+            return await oauth.tokenRequest({
                 code,
                 grantType: "authorization_code",
                 scope: "identify"
             })
             // console.log(data)
-            return data
         } catch {
             return null
         }

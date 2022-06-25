@@ -1,10 +1,9 @@
-const express = require("express");
-const {renderFile} = require("../util/functions");
-const config = require('../config.json')
+const express = require("express")
+const {renderFile} = require("../util/functions")
 
 const namespace = '/'
 
-function getRouter({query, checkForDomain, getUser}) {
+function getRouter({checkForDomain, getUser}) {
     const mainRouter = express.Router()
 
     mainRouter.use(checkForDomain)
@@ -15,13 +14,18 @@ function getRouter({query, checkForDomain, getUser}) {
     mainRouter.get(/^\/dashboard(\/[a-zA-Z0-9\/]*)?$/, async (req, res) => {
         const user = await getUser(req)
         if (!user) return res.redirect('/auth/login')
-        if (!config.whitelist) {
+        res.send(await renderFile('dashboard', {user: user.data}))
+        /* if (!config.whitelist) {
             res.send(await renderFile('dashboard', {user: user.data}))
         } else {
-            let result = await query(`SELECT * FROM whitelist WHERE id = ?`, [user.userId])
+            let result = await prisma.whitelist.findUnique({
+                where: {
+                    id: user.userId
+                }
+            })
             if (result.length === 0) res.send(await renderFile('whitelistOnly', {user: user.data}))
             else res.send(await renderFile('dashboard', {user: user.data}))
-        }
+        } */
     })
 
     return mainRouter

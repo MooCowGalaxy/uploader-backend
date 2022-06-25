@@ -9,7 +9,7 @@ import('file-type').then(module => {
 
 const namespace = '/api'
 
-function getRouter({checkForDomain, getUser, query, saveFile, deleteFile}) {
+function getRouter({checkForDomain, getUser, prisma, saveFile, deleteFile}) {
     const api = express.Router()
 
     const statsHistoryCache = {
@@ -19,10 +19,18 @@ function getRouter({checkForDomain, getUser, query, saveFile, deleteFile}) {
 
     async function getStats() {
         if (statsHistoryCache.lastUpdated + 30 * 60 * 1000 < Date.now()) {
-            let results = await query(`SELECT * FROM stats ORDER BY timestamp DESC LIMIT 72`)
+            let results = await prisma.stats.findMany({
+                orderBy: [
+                    {timestamp: 'desc'}
+                ],
+                take: 72
+            })
             results.reverse()
             statsHistoryCache.lastUpdated = Date.now()
-            statsHistoryCache.data = results
+            statsHistoryCache.data = []
+            for (let result of results) {
+                statsHistoryCache.data.push({timestamp: parseInt(result.timestamp), users: result.users, bytesUsed: parseInt(result.bytesUsed), imagesUploaded: parseInt(result.imagesUploaded)})
+            }
         }
         return statsHistoryCache.data
     }
@@ -35,13 +43,20 @@ function getRouter({checkForDomain, getUser, query, saveFile, deleteFile}) {
     api.get('/user', async (req, res) => {
         const user = await getUser(req)
         if (!user) return res.status(401).send({success: false, error: 'Unauthorized'})
-        res.send({success: true, data: user.data, user: {storageQuota: user.user.storage_quota, uploadLimit: user.user.upload_limit, uploadCount: user.user.upload_count, bytesUsed: parseInt(user.user.bytes_used), bytesHuman: humanReadableBytes(user.user.bytes_used), domain: user.user.domain, apiKey: user.user.api_key, linkType: user.user.link_type}})
+        res.send({success: true, data: user.data, user: {storageQuota: user.user.storageQuota, uploadLimit: user.user.uploadLimit, uploadCount: user.user.uploadCount, bytesUsed: parseInt(user.user.bytesUsed), bytesHuman: humanReadableBytes(user.user.bytesUsed), domain: user.user.domain, apiKey: user.user.apiKey, settings: user.user.settings}})
     })
     api.post('/user/regenerate', async (req, res) => {
         const user = await getUser(req)
         if (!user) return res.status(401).send({success: false, error: 'Unauthorized'})
         let apiKey = createTokenString(20)
-        await query(`UPDATE users SET api_key = ? WHERE id = ?`, [apiKey, user.user.id])
+        await prisma.user.update({
+            where: {
+                id: user.user.id
+            },
+            data: {
+                apiKey
+            }
+        })
         res.send({success: true, apiKey})
     })
     api.post('/user/link', async (req, res) => {
@@ -51,7 +66,14 @@ function getRouter({checkForDomain, getUser, query, saveFile, deleteFile}) {
         if (typeof body !== "object") return res.status(400).send({success: false, error: 'Bad Request'})
         if (typeof body.type !== 'number') return res.status(400).send({success: false, error: 'Bad Request'})
         if (body.type > 2 || body.type < 0) return res.status(400).send({success: false, error: 'Bad Request'})
-        await query(`UPDATE users SET link_type = ? WHERE id = ?`, [body.type, user.user.id])
+        await prisma.settings.update({
+            where: {
+                userId: user.user.id
+            },
+            data: {
+                linkType: body.type
+            }
+        })
         res.send({success: true})
     })
     api.get('/user/embed', async (req, res) => {
@@ -83,13 +105,20 @@ function getRouter({checkForDomain, getUser, query, saveFile, deleteFile}) {
             if (isNaN(parseInt(body.color.slice(1), 16))) return res.status(400).send({success: false, error: 'Bad Request'})
         }
 
-        user.user.settings.color = body.color !== undefined ? body.color : user.user.settings.color
-        if (typeof user.user.settings.embed === 'undefined') user.user.settings.embed = {}
-        user.user.settings.embed.enabled = body.enabled !== undefined ? body.enabled : user.user.settings.embed.enabled
-        user.user.settings.embed.siteName = body.name !== undefined ? body.name : user.user.settings.embed.siteName
-        user.user.settings.embed.title = body.title !== undefined ? body.title : user.user.settings.embed.title
-        user.user.settings.embed.description = body.description !== undefined ? body.description : user.user.settings.embed.description
-        await query(`UPDATE users SET settings = ? WHERE id = ?`, [JSON.stringify(user.user.settings), user.user.id])
+        user.user.settings.embedColor = body.color !== undefined ? body.color : user.user.settings.embedColor
+        user.user.settings.embedEnabled = body.enabled !== undefined ? body.enabled : user.user.settings.embedEnabled
+        user.user.settings.embedSiteName = body.name !== undefined ? body.name : user.user.settings.embedSiteName
+        user.user.settings.embedSiteTitle = body.title !== undefined ? body.title : user.user.settings.embedSiteTitle
+        user.user.settings.embedSiteDescription = body.description !== undefined ? body.description : user.user.settings.embedSiteDescription
+        delete user.user.settings.id
+        delete user.user.settings.userId
+        delete user.user.settings.linkType
+        await prisma.settings.update({
+            where: {
+                id: user.user.id
+            },
+            data: user.user.settings
+        })
         res.send({success: true})
     })
     api.get('/user/images', async (req, res) => {
@@ -104,29 +133,75 @@ function getRouter({checkForDomain, getUser, query, saveFile, deleteFile}) {
         // 4: file size (small to large)
         // 5: file size (large to small)
         if (sort > 5) sort = 0
-        let sortQuery = ['ORDER BY id DESC', 'ORDER BY id', 'ORDER BY fileId', 'ORDER BY fileId DESC', 'ORDER BY size', 'ORDER BY size DESC'][sort]
+        let sortQuery = [{id: 'desc'}, {id: 'asc'}, {fileId: 'asc'}, {fileId: 'desc'}, {size: 'asc'}, {size: 'desc'}][sort]
         const rowLimit = 25
-        let total = await query(`SELECT COUNT(*) AS total FROM images WHERE ownerId = ?`, [user.user.id])
-        let limit = Math.ceil(parseInt(total[0].total) / rowLimit)
-        if (limit < page) return res.send({success: true, pages: {total: parseInt(total[0].total), page, limit}, sort, data: []})
-        let results = await query(`SELECT fileId, originalName, size, timestamp, extension, viewCount, domain, alias FROM images WHERE ownerId = ? ${sortQuery} LIMIT ?, ?`,
-            [user.user.id, rowLimit * (page - 1), rowLimit])
-        res.json({success: true, pages: {total: parseInt(total[0].total), page, limit}, sort, data: results})
+        let total = await prisma.image.aggregate({
+            _count: {
+                size: true
+            }
+        })
+        let limit = Math.ceil(parseInt(total._count.size) / rowLimit)
+        if (limit < page) return res.send({success: true, pages: {total: parseInt(total._count.size), page, limit}, sort, data: []})
+        let results = await prisma.image.findMany({
+            skip: rowLimit * (page - 1),
+            take: rowLimit,
+            where: {
+                ownerId: user.user.id
+            },
+            select: {
+                fileId: true,
+                originalName: true,
+                size: true,
+                timestamp: true,
+                extension: true,
+                viewCount: true,
+                domain: true,
+                alias: true
+            },
+            orderBy: sortQuery
+        })
+        let finalResult = []
+        for (let result of results) {
+            result.size = parseInt(result.size)
+            result.timestamp = parseInt(result.timestamp)
+            finalResult.push(result)
+        }
+        res.json({success: true, pages: {total: parseInt(total._count.size), page, limit}, sort, data: finalResult})
     })
     api.post('/user/image/delete/:id', async (req, res) => {
         const user = await getUser(req)
         if (!user) return res.status(401).send({success: false, error: 'Unauthorized'})
         const id = req.params.id
         if (!id) return res.status(400).send({success: false, error: 'Bad Request'})
-        let results = await query(`SELECT * FROM images WHERE fileId = ? AND ownerId = ? LIMIT 1`, [id, user.user.id])
-        if (results.length === 0) return res.status(400).send({success: false, error: 'Image not found'})
-        let image = results[0]
+        let image = await prisma.image.findFirst({
+            where: {
+                fileId: id,
+                ownerId: user.user.id
+            }
+        })
+        if (image === null) return res.status(400).send({success: false, error: 'Image not found'})
         try {
             await deleteFile(`${id}.${image.extension}`)
         } catch {}
-        await query(`DELETE FROM images WHERE fileId = ?`, [id])
+        await prisma.image.delete({
+            where: {
+                fileId: id
+            }
+        })
 
-        await query(`UPDATE users SET upload_count = upload_count - 1, bytes_used = bytes_used - ? WHERE id = ?`, [parseInt(image.size), user.user.id])
+        await prisma.user.update({
+            where: {
+                id: user.user.id
+            },
+            data: {
+                uploadCount: {
+                    increment: -1
+                },
+                bytesUsed: {
+                    increment: 0 - parseInt(image.size)
+                }
+            }
+        })
 
         global.totalFiles -= 1;
         global.totalBytes -= parseInt(image.size);
@@ -149,11 +224,46 @@ function getRouter({checkForDomain, getUser, query, saveFile, deleteFile}) {
                 return res.status(400).send({success: false, error: 'Bad Request'})
             }
         }
-        let results = await query(`SELECT * FROM subdomains WHERE domain = 'is-trolli.ng' AND subdomain = ?`, [subdomain])
-        if (results.length > 0 && results[0].ownerId !== user.user.id) return res.status(400).send({success: false, error: 'Subdomain taken'})
-        await query(`DELETE FROM subdomains WHERE ownerId = ?`, [user.user.id])
-        await query(`INSERT INTO subdomains (domain, subdomain, ownerId) VALUES (?, ?, ?)`, ['is-trolli.ng', subdomain, user.user.id])
-        await query(`UPDATE users SET domain = ? WHERE id = ?`, [`${subdomain}.is-trolli.ng`, user.user.id])
+        let result = await prisma.subdomain.findFirst({
+            where: {
+                domainName: 'is-trolli.ng',
+                subdomain
+            }
+        })
+        if (result !== null) {
+            if (result.ownerId !== user.user.id) return res.send({success: true})
+            else return res.status(400).send({success: false, error: 'Subdomain taken'})
+        }
+        try {
+            await prisma.subdomain.delete({
+                where: {
+                    ownerId: user.user.id
+                }
+            })
+        } catch {}
+        await prisma.subdomain.create({
+            data: {
+                domain: {
+                    connect: {
+                        domain: 'is-trolli.ng'
+                    }
+                },
+                subdomain,
+                owner: {
+                    connect: {
+                        id: user.user.id
+                    }
+                }
+            }
+        })
+        await prisma.user.update({
+            where: {
+                id: user.user.id
+            },
+            data: {
+                domain: `${subdomain}.is-trolli.ng`
+            }
+        })
         res.send({success: true})
     })
     api.get('/stats', async (req, res) => {
@@ -178,7 +288,7 @@ function getRouter({checkForDomain, getUser, query, saveFile, deleteFile}) {
             RequestMethod: "POST",
             RequestURL: "https://uploader.tech/api/upload",
             Headers: {
-                key: user.user.api_key
+                key: user.user.apiKey
             },
             Body: "MultipartFormData",
             FileFormName: "file",
@@ -191,13 +301,17 @@ function getRouter({checkForDomain, getUser, query, saveFile, deleteFile}) {
         let key = req.header("key")
         let file = req.file;
 
-        let results = await query('SELECT * FROM users WHERE api_key = ?', [key])
+        let user = await prisma.user.findFirst({
+            where: {
+                apiKey: key
+            },
+            include: {
+                settings: true
+            }
+        })
 
         // check: API key
-        if (results.length === 0) return res.status(401).json({error: true, message: "Invalid key"})
-        let user = results[0]
-        user.settings = JSON.parse(user.settings)
-        user.bytes_used = parseInt(user.bytes_used)
+        if (user === null) return res.status(401).json({error: true, message: "Invalid key"})
         userCache[user.id] = {
             data: user,
             lastUpdated: Date.now()
@@ -214,41 +328,47 @@ function getRouter({checkForDomain, getUser, query, saveFile, deleteFile}) {
         if (!['png', 'jpg', 'jpeg', 'gif', 'mp4'].includes(mimetype.ext)) return res.status(400).json({error: true, message: 'Invalid file type'})
 
         // check: user quotas - upload limit
-        if (file.size > user.upload_limit * 1000 * 1000) return res.status(400).json({error: true, message: 'Upload size limit exceeded'})
+        if (file.size > user.uploadLimit * 1000 * 1000) return res.status(400).json({error: true, message: 'Upload size limit exceeded'})
         // check: user quotas - storage limit
-        if (user.bytes_used + file.size > user.storage_quota * 1000 * 1000 * 1000) return res.status(400).json({error: true, message: 'Storage quota exceeded'})
+        if (parseInt(user.bytesUsed) + file.size > user.storageQuota * 1000 * 1000 * 1000) return res.status(400).json({error: true, message: 'Storage quota exceeded'})
 
         let extension = file.originalname.split('.').slice(-1)
+        if (extension.length > 0) extension = extension[0]
+        else return res.status(400).json({error: true, message: 'Invalid file extension'})
         let fileId = createTokenString(9)
         let fileName = `${fileId}.${extension}`
-        let fileAlias = [fileId, createEmojiString(4), createZWSString(20)][user.link_type]
+        let fileAlias = [fileId, createEmojiString(4), createZWSString(20)][user.settings.linkType]
         await saveFile(fileName, file.buffer)
 
         let url = `https://${user.domain}/${fileAlias}`
-        let dimensions = ['png', 'jpg', 'jpeg', 'gif'].includes(extension[0]) ? sizeOfImage(file.buffer) : {width: 0, height: 0}
-        let data = {
-            fileId,
-            extension,
-            originalName: file.originalname,
-            size: file.size,
-            timestamp: Date.now(),
-            viewCount: 0,
-            ownerId: user.id,
-            width: dimensions.width,
-            height: dimensions.height
-        }
+        let dimensions = ['png', 'jpg', 'jpeg', 'gif'].includes(extension) ? sizeOfImage(file.buffer) : {width: 0, height: 0}
 
-        await query(
-            `INSERT INTO images (fileId, originalName, size, timestamp, extension, ownerId, width, height, domain, alias) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [data.fileId, data.originalName, data.size, data.timestamp, data.extension, data.ownerId, data.width, data.height, user.domain, fileAlias]
-        )
+        await prisma.image.create({
+            data: {
+                fileId,
+                originalName: file.originalname,
+                size: file.size,
+                timestamp: Date.now(),
+                extension,
+                ownerId: user.id,
+                width: dimensions.width,
+                height: dimensions.height,
+                domain: user.domain,
+                alias: fileAlias
+            }
+        })
         global.totalFiles++;
-        global.totalBytes += data.size;
+        global.totalBytes += file.size;
 
-        await query(
-            `UPDATE users SET upload_count = upload_count + 1, bytes_used = bytes_used + ? WHERE id = ?`,
-            [data.size, user.id]
-        )
+        await prisma.user.update({
+            where: {
+                id: user.id
+            },
+            data: {
+                uploadCount: {increment: 1},
+                bytesUsed: {increment: file.size}
+            }
+        })
 
         res.json({error: false, message: "Uploaded!", url: url})
     })

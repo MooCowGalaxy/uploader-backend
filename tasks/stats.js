@@ -1,9 +1,8 @@
-module.exports = (query) => {
+module.exports = (prisma) => {
     return {
         task: () => {
             (async () => {
-                await query(`INSERT INTO stats (timestamp, users, bytes_used, images_uploaded) VALUES (?, (SELECT COUNT(*) AS result FROM users), (SELECT SUM(size) AS result FROM images), (SELECT COUNT(*) AS result FROM images))`,
-                    [Math.round(Date.now() / 1000)])
+                await prisma.$queryRaw`INSERT INTO stats (timestamp, users, bytesUsed, imagesUploaded) VALUES (${Math.round(Date.now() / 1000)}, (SELECT COUNT(*) AS result FROM user), (SELECT SUM(size) AS result FROM image), (SELECT COUNT(*) AS result FROM image))`
             })()
         },
         time: '0 * * * *' // cron format

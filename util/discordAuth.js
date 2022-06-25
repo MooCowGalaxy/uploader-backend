@@ -1,15 +1,17 @@
-function discordAuth(pool) {
+function discordAuth({prisma}) {
     const express = require('express')
     const {renderFile, getCookie, createTokenString} = require('./functions')
-    const {getUser, getUserData, generateURL, getBearerToken} = require('./authFunctions')(pool)
+    const {getUser, getUserData, generateURL, getBearerToken} = require('./authFunctions')(prisma)
 
     const router = express.Router()
 
-    const {query} = require('./database')(pool)
+    function isLoggedIn(user) {
+        return user !== null
+    }
 
     router.get('/login', async (req, res) => {
         const user = await getUser(req)
-        if (user !== null) res.redirect('/dashboard')
+        if (isLoggedIn(user)) res.redirect('/dashboard')
         else res.redirect(generateURL())
     })
     router.get('/callback', async (req, res) => {
@@ -24,13 +26,30 @@ function discordAuth(pool) {
         let lastUpdated = Math.floor(Date.now() / 1000)
         let userId = userData.id
         let token = createTokenString(64)
-        await query(`INSERT INTO tokens (user_id, token, bearer_token, expires, cache, last_updated) VALUES (?, ?, ?, ?, ?, ?)`, [userId, token, accessToken, expiresIn, JSON.stringify(userData), lastUpdated])
+        await prisma.token.create({
+            data: {
+                user: {
+                    connect: {
+                        discordId: BigInt(userId)
+                    }
+                },
+                token,
+                bearerToken: accessToken,
+                expires: expiresIn,
+                cache: JSON.stringify(userData),
+                lastUpdated
+            }
+        })
         res.cookie('token', token, {expires: new Date(expiresIn * 1000)})
         res.send(await renderFile('callback', {valid: true}))
     })
     router.get('/logout', async (req, res) => {
         const cookies = getCookie(req)
-        if (cookies.token) await query(`DELETE FROM tokens WHERE token = ?`, [cookies.token])
+        if (cookies.token) await prisma.token.delete({
+            where: {
+                token: cookies.token
+            }
+        })
         res.cookie('token', '')
         res.redirect('/')
     })
@@ -38,4 +57,7 @@ function discordAuth(pool) {
     return router
 }
 
-module.exports = discordAuth
+module.exports = {
+    getRouter: discordAuth,
+    namespace: '/auth'
+}

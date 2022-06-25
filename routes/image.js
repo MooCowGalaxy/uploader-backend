@@ -6,15 +6,18 @@ const sizeOfImage = require("image-size");
 
 const namespace = '/'
 
-function getRouter({query, resolvePlaceholders}) {
+function getRouter({prisma, resolvePlaceholders}) {
     const imageRouter = express.Router()
     imageRouter.get('/i/:id', async (req, res, next) => {
         if (req.hostname !== config.mainDomain && config.production) return next();
         const fileId = req.params.id
 
-        let results = await query(`SELECT * FROM images WHERE fileId = ?`, [fileId])
-        if (results.length === 0) return res.send(await renderFile('notFound'))
-        let result = results[0]
+        let result = await prisma.image.findFirst({
+            where: {
+                fileId
+            }
+        })
+        if (result === null) return res.send(await renderFile('notFound'))
         let fileName = `${result.fileId}.${result.extension}`
 
         if (!(['png', 'jpg', 'gif'].includes(`${result.extension}`))) {
@@ -22,17 +25,40 @@ function getRouter({query, resolvePlaceholders}) {
         }
         if (result.width === null) {
             let dimensions = sizeOfImage(`${config.production ? config.savePathProd : config.savePathTest}/${result.fileId}.${result.extension}`)
-            await query(`UPDATE images SET width = ?, height = ? WHERE fileId = ?`, [dimensions.width, dimensions.height, result.fileId])
+            await prisma.image.update({
+                where: {
+                    fileId
+                },
+                data: {
+                    width: dimensions.width,
+                    height: dimensions.height,
+                    viewCount: {increment: 1}
+                }
+            })
+        } else {
+            await prisma.image.update({
+                where: {
+                    fileId
+                },
+                data: {
+                    viewCount: {increment: 1}
+                }
+            })
         }
-        await query(`UPDATE images SET viewCount = viewCount + 1 WHERE fileId = ?`, [result.fileId])
         result.viewCount++;
 
         let user = global.userCache[result.ownerId]
         if (!user || user.lastUpdated < (Date.now() - 1000 * 60 * 5)) {
-            let results = await query(`SELECT * FROM users WHERE id = ?`, [result.ownerId])
-            if (results.length === 0) return res.status(404).send(await renderFile('notFound'))
-            user = results[0]
-            user.settings = JSON.parse(user.settings)
+            let r = await prisma.user.findUnique({
+                where: {
+                    id: result.ownerId
+                },
+                include: {
+                    settings: true
+                }
+            })
+            if (r === null) return res.status(404).send(await renderFile('notFound'))
+            user = r
             global.userCache[user.id] = {
                 data: user,
                 lastUpdated: Date.now()
@@ -63,12 +89,11 @@ function getRouter({query, resolvePlaceholders}) {
         let fileAlias = req.params.id;
         if (fileAlias.includes('/')) return next();
         if (fileAlias.startsWith('dashboard')) return next();
-        let results;
+        let result;
 
-        if (config.production) results = await query(`SELECT * FROM images WHERE alias = ? AND domain = ?`, [fileAlias, req.hostname])
-        else results = await query(`SELECT * FROM images WHERE alias = ?`, [fileAlias])
-        if (results.length === 0) return res.status(404).send(await renderFile('notFound'))
-        let result = results[0]
+        if (config.production) result = await prisma.image.findFirst({where: {alias: fileAlias, domain: req.hostname}})
+        else result = await prisma.image.findFirst({where: {alias: fileAlias}})
+        if (result === null) return res.status(404).send(await renderFile('notFound'))
 
         res.redirect(`${config.production ? `https://${config.mainDomain}` : ''}/i/${result.fileId}`)
     })

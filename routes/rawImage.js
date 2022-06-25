@@ -8,15 +8,19 @@ import('file-type').then(module => {
 
 const namespace = '/raw'
 
-function getRouter({query, getFile}) {
+function getRouter({prisma, getFile}) {
     const rawImageRouter = express.Router()
 
     rawImageRouter.get('/:id', async (req, res) => {
         let fileName = req.params.id
         let fileId = fileName.split('.').slice(0, -1).join(".")
 
-        let results = await query(`SELECT * FROM images WHERE fileId = ?`, [fileId])
-        if (results.length === 0) return res.status(404).send(await renderFile('notFound'))
+        let result = await prisma.image.findFirst({
+            where: {
+                fileId
+            }
+        })
+        if (result === null) return res.status(404).send(await renderFile('notFound'))
 
         if (config.storageType === 'minio') {
             let buffer = await getFile(fileName)
