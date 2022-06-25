@@ -208,7 +208,7 @@ const pages = {
                             plugins: {
                                 title: {
                                     display: true,
-                                    text: 'uploader.tech statistics'
+                                    text: 'Uploader Statistics'
                                 }
                             },
                             stacked: false,
@@ -288,7 +288,7 @@ const pages = {
             </div>
             <div class="list-item">
                 <p>2.</p>
-                <div>Download your generated ShareX config <a href="/api/config/sharex" class="link" target="_blank" rel="noopener noreferrer">here</a> and open it. Click "yes" to make uploader.tech the default custom uploader.</div>
+                <div>Download your generated ShareX config <a href="/api/config/sharex" class="link" target="_blank" rel="noopener noreferrer">here</a> and open it. Click "yes" to make Uploader the default custom uploader.</div>
             </div>
             <div class="list-item">
                 <p>3.</p>
@@ -300,7 +300,7 @@ const pages = {
             </div>
             <div class="list-item">
                 <p>5.</p>
-                <div>Done! You can now start sharing screenshots through uploader.tech. You can also customize your uploader.tech experience by changing <a href="/dashboard/embed" class="link">embed</a> or <a href="/dashboard/domains" class="link">domain</a> settings.</div>
+                <div>Done! You can now start sharing screenshots through Uploader. You can also customize your Uploader experience by changing <a href="/dashboard/embed" class="link">embed</a> or <a href="/dashboard/domains" class="link">domain</a> settings.</div>
             </div>
         </div>
     </div>
@@ -675,7 +675,7 @@ const pages = {
                         <img src="/static/img/SXL.png" alt="" class="max-h-28 sm:max-h-36 md:max-h-48 xl:max-h-64 object-contain w-auto max-w-full">
                     </div>
                 </div>
-                <div id="embed-image-only" class="max-w-3xl hidden"><img src="/static/img/SXL.png" alt=""></div>
+                <div id="embed-image-only" class="max-w-3xl hidden"><img src="/static/img/SXL.png" alt="" class="max-h-28 sm:max-h-36 md:max-h-48 xl:max-h-64 object-contain w-auto max-w-full"></div>
             </div>
         </div>
         <p class="text-red-600" id="page-embed-embed-error"></p>
@@ -873,7 +873,7 @@ const pages = {
         </div>
     </div>
     <p class="mb-1 text-red-600" id="page-domains-error"></p>
-    <button id="page-domains-save" class="bg-green-300 px-4 py-2 rounded-md mb-3 disabled:opacity-75" disabled>Save</button>
+    <button id="page-domains-save" class="bg-green-300 px-4 py-2 rounded-md mb-3 disabled:opacity-75 disabled:bg-gray-300" disabled>Save</button>
     <p>More options will be available in the future!</p>
 </div>
 `
@@ -887,7 +887,7 @@ const pages = {
         html: `
         <div class="content">
             <h1>Rules</h1> 
-            <p class="mb-2">By using uploader.tech, you agree to abiding by the rules listed below. These rules are not exhaustive, and actions are ultimately up to staff discretion.</p>
+            <p class="mb-2">By using Uploader, you agree to abiding by the rules listed below. These rules are not exhaustive, and actions are ultimately up to staff discretion.</p>
             <ol class="list-decimal ml-10 mb-2">
                 <li>Do not upload NSFW content or gore to the service.</li>
                 <li>Do not upload content that illustrates/portrays illegal activities.</li>
