@@ -1,5 +1,5 @@
 const express = require("express");
-const {humanReadableBytes, createTokenString, createEmojiString, createZWSString} = require("../util/functions");
+const {humanReadableBytes, createTokenString, createEmojiString, createZWSString, decodeZWSString} = require("../util/functions");
 const sizeOfImage = require("image-size");
 const upload = require('multer')()
 let fileTypeFromBuffer;
@@ -164,6 +164,7 @@ function getRouter({checkForDomain, getUser, prisma, saveFile, deleteFile}) {
         for (let result of results) {
             result.size = parseInt(result.size)
             result.timestamp = parseInt(result.timestamp)
+            if (result.alias.startsWith('z:')) result.alias = decodeZWSString(result.alias)
             finalResult.push(result)
         }
         res.json({success: true, pages: {total: parseInt(total._count.size), page, limit}, sort, data: finalResult})
@@ -340,7 +341,7 @@ function getRouter({checkForDomain, getUser, prisma, saveFile, deleteFile}) {
         let fileAlias = [fileId, createEmojiString(4), createZWSString(20)][user.settings.linkType]
         await saveFile(fileName, file.buffer)
 
-        let url = `https://${user.domain}/${fileAlias}`
+        let url = `https://${user.domain}/${user.settings.linkType === 2 ? decodeZWSString(fileAlias) : fileAlias}`
         let dimensions = ['png', 'jpg', 'jpeg', 'gif'].includes(extension) ? sizeOfImage(file.buffer) : {width: 0, height: 0}
 
         await prisma.image.create({

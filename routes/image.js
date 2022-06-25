@@ -1,6 +1,6 @@
 const express = require("express");
 const config = require("../config.json");
-const {renderFile, humanReadableBytes} = require("../util/functions");
+const {renderFile, humanReadableBytes, isZWSString, encodeZWSString} = require("../util/functions");
 const path = require("path");
 const sizeOfImage = require("image-size");
 
@@ -89,6 +89,7 @@ function getRouter({prisma, resolvePlaceholders}) {
         let fileAlias = req.params.id;
         if (fileAlias.includes('/')) return next();
         if (fileAlias.startsWith('dashboard')) return next();
+        if (isZWSString(fileAlias)) fileAlias = encodeZWSString(fileAlias)
         let result;
 
         if (config.production) result = await prisma.image.findFirst({where: {alias: fileAlias, domain: req.hostname}})

@@ -61,11 +61,35 @@ module.exports = {
         return str
     },
     createZWSString(num = 20) {
-        const zws = '\u200B\u200C\u200D\u2060'.split('')
+        const zws = '0123'.split('')
         let str = ''
         for (let i = 0; i < num; i++) {
             str = `${str}${zws[Math.floor(Math.random() * zws.length)]}`
         }
-        return str
+        return `z:${str}`
+    },
+    decodeZWSString(str) { // z:0123 => ````
+        const zws = '\u200B\u200C\u200D\u2060'
+        let s = ''
+        for (let i = 2; i < str.length; i++) {
+            s = `${s}${zws[parseInt(str[i])]}`
+        }
+        return s
+    },
+    encodeZWSString(str) { // ```` => z:0123
+        const zws = '\u200B\u200C\u200D\u2060'
+        let s = ''
+        for (let i = 0; i < str.length; i++) {
+            s = `${s}${zws.indexOf(str[i])}`
+        }
+        return `z:${s}`
+    },
+    isZWSString(str) {
+        const zws = '\u200B\u200C\u200D\u2060'
+        let incl = true
+        for (let i = 0; i < str.length; i++) {
+            if (!zws.includes(str[i])) incl = false
+        }
+        return incl;
     }
 }
