@@ -7,6 +7,7 @@ const sizeOfImage = require('image-size')
 const path = require('path')
 const nodeSchedule = require('node-schedule')
 const {PrismaClient} = require('@prisma/client')
+const {consumeRatelimit} = require('./util/ratelimits')
 const fs = require('fs')
 
 const config = require('./config.json')
@@ -81,6 +82,7 @@ const options = {
     saveFile,
     resolvePlaceholders,
     deleteFile,
+    consumeRatelimit,
 }
 
 let middlewareCount = 0

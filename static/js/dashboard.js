@@ -4,7 +4,82 @@ let isModalClosable = true
 let route = null;
 let user = null;
 let beforePageChangeHook;
+let toastCount = 0;
 
+function createToast({type, title, content, time = 'Just now'}) {
+    let id = ['info', 'success', 'warning', 'error'].indexOf(type)
+    if (id === -1) throw new Error('Invalid type');
+    let toastId = toastCount;
+    let svg = [
+        '<path fill="currentColor" d="M256 8C119.043 8 8 119.083 8 256c0 136.997 111.043 248 248 248s248-111.003 248-248C504 119.083 392.957 8 256 8zm0 110c23.196 0 42 18.804 42 42s-18.804 42-42 42-42-18.804-42-42 18.804-42 42-42zm56 254c0 6.627-5.373 12-12 12h-88c-6.627 0-12-5.373-12-12v-24c0-6.627 5.373-12 12-12h12v-64h-12c-6.627 0-12-5.373-12-12v-24c0-6.627 5.373-12 12-12h64c6.627 0 12 5.373 12 12v100h12c6.627 0 12 5.373 12 12v24z"></path>',
+        '<path fill="currentColor" d="M504 256c0 136.967-111.033 248-248 248S8 392.967 8 256 119.033 8 256 8s248 111.033 248 248zM227.314 387.314l184-184c6.248-6.248 6.248-16.379 0-22.627l-22.627-22.627c-6.248-6.249-16.379-6.249-22.628 0L216 308.118l-70.059-70.059c-6.248-6.248-16.379-6.248-22.628 0l-22.627 22.627c-6.248 6.248-6.248 16.379 0 22.627l104 104c6.249 6.249 16.379 6.249 22.628.001z"></path>',
+        '<path fill="currentColor" d="M569.517 440.013C587.975 472.007 564.806 512 527.94 512H48.054c-36.937 0-59.999-40.055-41.577-71.987L246.423 23.985c18.467-32.009 64.72-31.951 83.154 0l239.94 416.028zM288 354c-25.405 0-46 20.595-46 46s20.595 46 46 46 46-20.595 46-46-20.595-46-46-46zm-43.673-165.346l7.418 136c.347 6.364 5.609 11.346 11.982 11.346h48.546c6.373 0 11.635-4.982 11.982-11.346l7.418-136c.375-6.874-5.098-12.654-11.982-12.654h-63.383c-6.884 0-12.356 5.78-11.981 12.654z"></path>',
+        '<path fill="currentColor" d="M256 8C119 8 8 119 8 256s111 248 248 248 248-111 248-248S393 8 256 8zm121.6 313.1c4.7 4.7 4.7 12.3 0 17L338 377.6c-4.7 4.7-12.3 4.7-17 0L256 312l-65.1 65.6c-4.7 4.7-12.3 4.7-17 0L134.4 338c-4.7-4.7-4.7-12.3 0-17l65.6-65-65.6-65.1c-4.7-4.7-4.7-12.3 0-17l39.6-39.6c4.7-4.7 12.3-4.7 17 0l65 65.7 65.1-65.6c4.7-4.7 12.3-4.7 17 0l39.6 39.6c4.7 4.7 4.7 12.3 0 17L312 256l65.6 65.1z"></path>'
+    ][id]
+    let color = [
+        'bg-blue-600', 'bg-green-500', 'bg-yellow-500', 'bg-red-600'
+    ][id]
+    let border = [
+        'border-blue-500',
+        'border-green-400',
+        'border-yellow-400',
+        'border-red-500'
+    ][id]
+
+    $('#toasts').append(`
+<div class="${color} shadow-lg mx-auto w-80 max-w-full text-sm pointer-events-auto bg-clip-padding rounded-lg block mb-3 toast" id="toast-${toastId}" role="alert" aria-live="assertive" aria-atomic="true" data-mdb-autohide="false">
+    <div class="${color} flex justify-between items-center py-2 px-3 bg-clip-padding border-b ${border} rounded-t-lg">
+        <p class="font-bold text-white flex items-center">
+            <svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="check-circle" class="w-4 h-4 mr-2 fill-current" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+                ${svg}
+            </svg>
+            ${title}</p>
+        <div class="flex items-center">
+            <p class="text-white opacity-90 text-xs">${time}</p>
+            <button id="toast-close-${toastId}" type="button" class="btn-close btn-close-white box-content w-4 h-4 ml-2 text-white border-none rounded-none opacity-50 focus:shadow-none focus:outline-none focus:opacity-100 hover:text-white hover:opacity-75 hover:no-underline" data-mdb-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+    <div class="p-3 ${color} rounded-b-lg break-words text-white">
+        ${content}
+    </div>
+</div>`);
+    setTimeout(() => {
+        $(`#toast-${toastId}`).addClass('show')
+    }, 10)
+    $(`#toast-close-${toastId}`).click(() => {
+        $(`#toast-${toastId}`).removeClass('show')
+        setTimeout(() => {
+            $(`#toast-${toastId}`).remove()
+        }, 300)
+    })
+    setTimeout(() => {
+        $(`#toast-close-${toastId}`).click()
+    }, 15000)
+    toastCount++;
+}
+function sendReq(url, {method = 'GET', data = {}} = {}) {
+    return new Promise((resolve, reject) => {
+        let settings = {
+            url,
+            method,
+            error: (jqXHR) => {
+                if (jqXHR.status === 429) {
+                    createToast({type: 'error', title: 'Request failed', content: 'You are currently being ratelimited.'})
+                } else {
+                    createToast({type: 'error', title: 'Request failed', content: jqXHR.responseJSON.error})
+                    console.error(jqXHR.responseJSON.error)
+                }
+                reject(jqXHR.responseJSON)
+            },
+            success: resolve
+        }
+        if (method === 'POST') {
+            settings.data = JSON.stringify(data)
+            settings.headers = {'Content-Type': 'application/json'}
+        }
+        $.ajax(settings)
+    })
+}
 function closeModal() {
     $('#modal').removeClass('visible')
 }
@@ -139,105 +214,95 @@ const pages = {
         onLoad: () => {
             $('#page-home-self-images').html(`<p><b class="font-semibold text-lime-600">${user.user.uploadCount}</b> images uploaded</p>`)
             $('#page-home-self-storage').html(`<p><b class="font-semibold text-cyan-600">${user.user.bytesHuman}</b> storage used</p>`)
-            $.ajax({
-                url: '/api/stats',
-                method: 'GET',
-                error: console.error,
-                success: data => {
-                    $('#page-home-global-images').html(`<p><b class="font-semibold text-lime-600">${data.fileCount}</b> images uploaded</p>`)
-                    $('#page-home-global-storage').html(`<p><b class="font-semibold text-cyan-600">${data.dataUsed}</b> storage used</p>`)
-                    $('#page-home-global-users').html(`<p><b class="font-semibold text-blue-600">${data.userCount}</b> users registered</p>`)
+            sendReq('/api/stats').then(data => {
+                $('#page-home-global-images').html(`<p><b class="font-semibold text-lime-600">${data.fileCount}</b> images uploaded</p>`)
+                $('#page-home-global-storage').html(`<p><b class="font-semibold text-cyan-600">${data.dataUsed}</b> storage used</p>`)
+                $('#page-home-global-users').html(`<p><b class="font-semibold text-blue-600">${data.userCount}</b> users registered</p>`)
+            }).catch()
+            sendReq('/api/stats/history').then(data => {
+                let times = []
+                let users = []
+                let bytes = []
+                let images = []
+                for (let row of data) {
+                    times.push(new Date(parseInt(row.timestamp) * 1000).toString().split(' ').slice(1, 5).join(' '))
+                    users.push(row.users)
+                    bytes.push(Math.round(row.bytesUsed / 10000) / 100)
+                    images.push(row.imagesUploaded)
                 }
-            })
-            $.ajax({
-                url: '/api/stats/history',
-                method: 'GET',
-                error: console.error,
-                success: data => {
-                    let times = []
-                    let users = []
-                    let bytes = []
-                    let images = []
-                    for (let row of data) {
-                        times.push(new Date(parseInt(row.timestamp) * 1000).toString().split(' ').slice(1, 5).join(' '))
-                        users.push(row.users)
-                        bytes.push(Math.round(row.bytesUsed / 10000) / 100)
-                        images.push(row.imagesUploaded)
-                    }
-                    const ctx = document.getElementById(`page-home-chart`)
-                    new Chart(ctx, {
-                        type: 'line',
-                        data: {
-                            labels: times,
-                            datasets: [{
-                                label: 'Storage used (MB)',
-                                data: bytes,
-                                borderColor: '#4287f5',
-                                fill: false,
-                                yAxisID: 'y'
-                            }, {
-                                label: 'Images uploaded',
-                                data: images,
-                                borderColor: '#c9ae02',
-                                fill: false,
-                                yAxisID: 'y1'
-                            }, {
-                                label: 'Users',
-                                data: users,
-                                borderColor: '#c22000',
-                                fill: false,
-                                yAxisID: 'y2'
-                            }]
+                const ctx = document.getElementById(`page-home-chart`)
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: times,
+                        datasets: [{
+                            label: 'Storage used (MB)',
+                            data: bytes,
+                            borderColor: '#4287f5',
+                            fill: false,
+                            yAxisID: 'y'
+                        }, {
+                            label: 'Images uploaded',
+                            data: images,
+                            borderColor: '#c9ae02',
+                            fill: false,
+                            yAxisID: 'y1'
+                        }, {
+                            label: 'Users',
+                            data: users,
+                            borderColor: '#c22000',
+                            fill: false,
+                            yAxisID: 'y2'
+                        }]
+                    },
+                    options: {
+                        elements: {
+                            point: {
+                                radius: 0
+                            }
                         },
-                        options: {
-                            elements: {
-                                point: {
-                                    radius: 0
+                        interaction: {
+                            mode: 'index',
+                            intersect: false
+                        },
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Uploader Statistics'
+                            }
+                        },
+                        stacked: false,
+                        scales: {
+                            y: {
+                                type: 'linear',
+                                display: true,
+                                position: 'left',
+                                grid: {
+                                    drawOnChartArea: true
                                 }
                             },
-                            interaction: {
-                                mode: 'index',
-                                intersect: false
-                            },
-                            plugins: {
-                                title: {
-                                    display: true,
-                                    text: 'Uploader Statistics'
+                            y1: {
+                                type: 'linear',
+                                display: true,
+                                position: 'right',
+                                grid: {
+                                    drawOnChartArea: false
                                 }
                             },
-                            stacked: false,
-                            scales: {
-                                y: {
-                                    type: 'linear',
-                                    display: true,
-                                    position: 'left',
-                                    grid: {
-                                        drawOnChartArea: true
-                                    }
-                                },
-                                y1: {
-                                    type: 'linear',
-                                    display: true,
-                                    position: 'right',
-                                    grid: {
-                                        drawOnChartArea: false
-                                    }
-                                },
-                                y2: {
-                                    type: 'linear',
-                                    display: true,
-                                    position: 'left',
-                                    grid: {
-                                        drawOnChartArea: false
-                                    }
+                            y2: {
+                                type: 'linear',
+                                display: true,
+                                position: 'left',
+                                grid: {
+                                    drawOnChartArea: false
                                 }
-                            },
-                            responsive: true,
-                            maintainAspectRatio: false
-                        }
-                    })
-                }
-            })
+                            }
+                        },
+                        responsive: true,
+                        maintainAspectRatio: false
+                    }
+                })
+            }).catch()
         },
         html: `
 <div class="content">
@@ -344,20 +409,18 @@ const pages = {
                     $('#modal-button-1').prop('disabled', true)
                     $('#modal-button-2').prop('disabled', true)
                     $('#modal-button-2').text('Regenerating...')
-                    $.ajax({
-                        url: '/api/user/regenerate',
-                        method: 'POST',
-                        error: console.error,
-                        success: (data) => {
-                            $('#modal-button-2').text('Regenerated')
-                            $('#modal-button-2').removeClass('bg-red-300')
-                            $('#modal-button-2').addClass('bg-green-300')
-                            setTimeout(() => {
-                                isModalClosable = true
-                                $('#modal').removeClass('visible')
-                            }, 500)
-                            user.user.apiKey = data.apiKey
-                        }
+                    sendReq('/api/user/regenerate', {method: 'POST'}).then((data) => {
+                        $('#modal-button-2').text('Regenerated')
+                        $('#modal-button-2').removeClass('bg-red-300')
+                        $('#modal-button-2').addClass('bg-green-300')
+                        setTimeout(() => {
+                            isModalClosable = true
+                            $('#modal').removeClass('visible')
+                        }, 500)
+                        user.user.apiKey = data.apiKey
+                    }).catch(() => {
+                        isModalClosable = true
+                        $('#modal').removeClass('visible')
                     })
                 }]
                 openModal({
@@ -384,22 +447,17 @@ const pages = {
                 $('#page-user-save-link').html(`<div class="spinner-border animate-spin inline-block w-4 h-4 border rounded-full text-gray-800" role="status">
     <span class="visually-hidden">Saving...</span>
 </div><span class="text-gray-800"> Saving...</span>`)
-                $.ajax({
-                    url: '/api/user/link',
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    data: JSON.stringify({type: parseInt($('#page-user-link-type').val())}),
-                    error: console.error,
-                    success: () => {
+                sendReq('/api/user/link', {method: 'POST', data: {type: parseInt($('#page-user-link-type').val())}})
+                    .then(() => {
                         $('#page-user-save-link').html('Saved!')
                         updateUserData()
                         setTimeout(() => {
                             $('#page-user-save-link').text('Save')
                         }, 1500)
-                    }
-                })
+                    })
+                    .catch(() => {
+                        $('#page-user-save-link').html('Save')
+                    })
             })
         },
         html: `
@@ -487,28 +545,21 @@ const pages = {
                 $('#page-embed-save').html(`<div class="spinner-border animate-spin inline-block w-4 h-4 border rounded-full text-gray-800" role="status">
     <span class="visually-hidden">Saving...</span>
 </div><span class="text-gray-800"> Saving...</span>`)
-                $.ajax({
-                    url: '/api/user/embed',
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    data: JSON.stringify({
+                sendReq('/api/user/embed', {method: 'POST', data: {
                         name: $('#page-embed-input-site-name').val(),
                         title: $('#page-embed-input-title').val(),
                         description: $('#page-embed-input-description').val(),
                         color: $('#page-embed-input-color').val(),
                         enabled: $('#page-embed-embed-toggle').prop('checked')
-                    }),
-                    error: console.error,
-                    success: () => {
-                        $('#page-embed-save').html('Saved!')
-                        setTimeout(() => {
-                            $('#page-embed-save').text('Save Changes')
-                            updateData()
-                        }, 1500)
                     }
+                }).then(() => {
+                    $('#page-embed-save').html('Saved!')
+                    setTimeout(() => {
+                        $('#page-embed-save').text('Save Changes')
+                        updateData()
+                    }, 1500)
+                }).catch(() => {
+                    $('#page-embed-save').text('Save Changes')
                 })
             })
             function updateEmbed() {
@@ -546,22 +597,17 @@ const pages = {
             $('#page-embed-input-color').on('input', updateEmbed)
 
             function updateData() {
-                $.ajax({
-                    url: '/api/user/embed',
-                    method: 'GET',
-                    error: console.error,
-                    success: (data) => {
-                        if (data.success) {
-                            $('#page-embed-embed-toggle').prop('checked', data.data.embedEnabled)
-                            $('#page-embed-input-site-name').val(data.data.embedSiteName)
-                            $('#page-embed-input-title').val(data.data.embedSiteTitle)
-                            $('#page-embed-input-description').val(data.data.embedSiteDescription)
-                            $('#page-embed-input-color').val(data.data.embedColor)
-                            original = data.data
-                            updateEmbed()
-                        }
+                sendReq('/api/user/embed').then((data) => {
+                    if (data.success) {
+                        $('#page-embed-embed-toggle').prop('checked', data.data.embedEnabled)
+                        $('#page-embed-input-site-name').val(data.data.embedSiteName)
+                        $('#page-embed-input-title').val(data.data.embedSiteTitle)
+                        $('#page-embed-input-description').val(data.data.embedSiteDescription)
+                        $('#page-embed-input-color').val(data.data.embedColor)
+                        original = data.data
+                        updateEmbed()
                     }
-                })
+                }).catch()
             }
             updateData()
 
@@ -695,11 +741,8 @@ const pages = {
                 $('#load-more').text('Loading...')
                 let oldScroll = $(window).scrollTop()
                 page++;
-                $.ajax({
-                    url: `/api/user/images?page=${page}&sort=${sort}`,
-                    method: 'GET',
-                    error: console.error,
-                    success: (data) => {
+                sendReq(`/api/user/images?page=${page}&sort=${sort}`)
+                    .then((data) => {
                         page = data.pages.page
                         $('#load-more').prop('disabled', false)
                         $('#load-more').text('Load More')
@@ -708,7 +751,7 @@ const pages = {
                             $('#image-gallery-container').html(`No images.`)
                             return;
                         }
-                        if (data.pages.limit === page) {
+                        if (data.pages.limit <= page) {
                             $('#load-more').addClass('hidden')
                         } else {
                             $('#load-more').removeClass('hidden')
@@ -764,19 +807,14 @@ const pages = {
                             $(`#i-${image.fileId}-delete`).click(() => {
                                 $(`#i-${image.fileId}-delete`).text('Deleting...')
                                 $(`#i-${image.fileId}-delete`).prop('disabled', true);
-                                $.ajax({
-                                    url: `/api/user/image/delete/${image.fileId}`,
-                                    method: 'POST',
-                                    error: console.error,
-                                    success: () => {
+                                sendReq(`/api/user/image/delete/${image.fileId}`, {method: 'POST'})
+                                    .then(() => {
                                         $(`#i-${image.fileId}`).remove()
-                                    }
-                                })
+                                    }).catch()
                             })
                         }
                         $(document).scrollTop(oldScroll)
-                    }
-                })
+                    }).catch()
             }
             $('#load-more').click(loadMore)
             loadMore()
@@ -842,26 +880,18 @@ const pages = {
             $('#page-domains-save').click(() => {
                 $('#page-domains-save').prop('disabled', true)
                 $('#page-domains-save').text('Saving...')
-                $.ajax({
-                    url: '/api/user/domains',
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    data: JSON.stringify({subdomain: $('#page-domains-subdomain').val()}),
-                    error: () => {
-                        $('#page-domains-save').text('Save')
-                        $('#page-domains-error').text('That subdomain is already taken.')
-                    },
-                    success: () => {
+                sendReq('/api/user/domains', {method: 'POST', data: {subdomain: $('#page-domains-subdomain').val()}})
+                    .then(() => {
                         $('#page-domains-save').text('Saved!')
                         updateUserData()
                         setTimeout(() => {
                             $('#page-domains-save').text('Save')
                             $('#page-domains-save').prop('disabled', false)
                         }, 1000)
-                    }
-                })
+                    }).catch((error) => {
+                        $('#page-domains-save').text('Save')
+                        $('#page-domains-error').text(error.error)
+                    })
             })
         },
         html: `
@@ -939,11 +969,8 @@ function checkPath() {
     setDocument('', null, false)
 }
 function updateUserData() {
-    $.ajax({
-        url: '/api/user',
-        method: 'GET',
-        error: console.error,
-        success: function (data) {
+    sendReq('/api/user')
+        .then((data) => {
             user = data
             $(document).ready(() => {
                 checkPath()
@@ -983,7 +1010,6 @@ function updateUserData() {
                 })
                 if (isSmall()) closeSidebar(true)
             })
-        }
-    })
+        }).catch()
 }
 updateUserData()

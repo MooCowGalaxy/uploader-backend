@@ -24,6 +24,7 @@
     "mysql": "^2.18.1",
     "node-schedule": "^2.1.0",
     "prisma": "^3.15.2",
+    "rate-limiter-flexible": "^2.3.7",
     "redis": "^4.1.0",
     "tw-elements": "^1.0.0-alpha12"
   },

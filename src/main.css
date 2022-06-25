@@ -6,6 +6,13 @@
     --theme-color: #003D7A;
     --gradient-color: #0058b0;
 }
+.toast {
+    opacity: 0;
+    transition: opacity 300ms ease-in-out;
+}
+.toast.show {
+    opacity: 1;
+}
 #discriminator {
     color: rgb(156 163 175);
 }
