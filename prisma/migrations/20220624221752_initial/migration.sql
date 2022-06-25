@@ -5,7 +5,7 @@
 
 */
 -- AlterTable
-ALTER TABLE `token` MODIFY `token` VARCHAR(255) NOT NULL;
+ALTER TABLE `Token` MODIFY `token` VARCHAR(255) NOT NULL;
 
 -- CreateIndex
 CREATE UNIQUE INDEX `Token_token_key` ON `Token`(`token`);
