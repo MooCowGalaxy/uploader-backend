@@ -120,12 +120,6 @@ function copyTextToClipboard(text) {
     }
     navigator.clipboard.writeText(text).then().catch(console.error)
 }
-$('#sort').on('input', () => {
-    sort = $('#sort').val()
-    page = 0
-    $('#image-gallery-container').empty()
-    loadMore()
-})
 const routes = {
     '': 'p-home',
     '/': 'r-',
@@ -688,6 +682,13 @@ const pages = {
         onLoad: () => {
             let sort = 0
             let page = 0
+
+            $('#sort').on('input', () => {
+                sort = $('#sort').val()
+                page = 0
+                $('#image-gallery-container').empty()
+                loadMore()
+            })
 
             function loadMore() {
                 $('#load-more').prop('disabled', true)
