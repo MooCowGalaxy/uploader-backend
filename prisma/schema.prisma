@@ -14,7 +14,7 @@ model User {
   discordTag   String     @db.VarChar(255)
   apiKey       String     @db.VarChar(20)
   settings     Settings?
-  domain       String     @default("is-trolli.ng") @db.VarChar(20)
+  domain       String     @default("is-trolli.ng") @db.VarChar(255)
   storageQuota Int        @default(10) // GB
   uploadLimit  Int        @default(100) // MB
   uploadCount  Int        @default(0)

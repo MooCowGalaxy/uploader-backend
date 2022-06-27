@@ -250,6 +250,7 @@ function getRouter({checkForDomain, getUser, prisma, saveFile, deleteFile, consu
         const user = await getUser(req)
         if (!user) return res.status(401).send({success: false, error: 'Unauthorized'})
         const subdomain = req.body.subdomain
+        console.log(subdomain)
         if (!subdomain || typeof subdomain !== 'string' || subdomain.length === 0 || subdomain.length > 20) return res.status(400).send({success: false, error: 'Bad Request'})
         let allowed = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890'.split('')
         for (let character of subdomain) {
