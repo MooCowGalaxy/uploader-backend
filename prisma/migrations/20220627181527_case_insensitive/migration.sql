@@ -24,7 +24,8 @@ ALTER TABLE `Settings` DROP FOREIGN KEY `Settings_userId_fkey`;
 ALTER TABLE `Subdomain` DROP FOREIGN KEY `Subdomain_ownerId_fkey`;
 
 -- DropTable
-DROP TABLE `user`;
+DROP TABLE IF EXISTS `user`;
+DROP TABLE IF EXISTS `User`;
 
 -- CreateTable
 CREATE TABLE `User` (
