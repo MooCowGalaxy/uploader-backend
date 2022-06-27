@@ -49,7 +49,7 @@ function getRouter({checkForDomain, getUser, prisma, saveFile, deleteFile, consu
         } catch {
             return res.status(429).send({success: false, error: 'You are being ratelimited.'})
         }
-        res.send({success: true, data: user.data, user: {storageQuota: user.user.storageQuota, uploadLimit: user.user.uploadLimit, uploadCount: user.user.uploadCount, bytesUsed: parseInt(user.user.bytesUsed), bytesHuman: humanReadableBytes(user.user.bytesUsed), domain: user.user.domain, apiKey: user.user.apiKey, settings: user.user.settings}})
+        res.send({success: true, data: user.data, user: {type: user.user.role, storageQuota: user.user.storageQuota, uploadLimit: user.user.uploadLimit, uploadCount: user.user.uploadCount, bytesUsed: parseInt(user.user.bytesUsed), bytesHuman: humanReadableBytes(user.user.bytesUsed), domain: user.user.domain, apiKey: user.user.apiKey, settings: user.user.settings}})
     })
     api.post('/user/regenerate', async (req, res) => {
         const user = await getUser(req)
