@@ -2,5 +2,6 @@
 /node_modules/
 config.json
 /dist/output.css
+/dist/dashboard/*
 /logs
 .env
