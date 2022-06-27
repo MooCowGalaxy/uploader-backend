@@ -20,6 +20,7 @@ model User {
   uploadCount  Int        @default(0)
   bytesUsed    BigInt     @default(0)
   createdAt    BigInt
+  role         Role       @default(USER)
   domains      Domain[]
   images       Image[]
   Subdomain    Subdomain?
@@ -89,4 +90,10 @@ model Token {
   expires     Int
   cache       String @db.Text
   lastUpdated Int
+}
+
+enum Role {
+  USER
+  DONATOR
+  DEVELOPER
 }
