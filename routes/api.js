@@ -257,11 +257,6 @@ function getRouter({checkForDomain, getUser, prisma, saveFile, deleteFile, consu
                 return res.status(400).send({success: false, error: 'Bad Request'})
             }
         }
-        try {
-            await consumeRatelimit(req.path, user.id)
-        } catch {
-            return res.status(429).send({success: false, error: 'You are being ratelimited.'})
-        }
         let result = await prisma.subdomain.findFirst({
             where: {
                 domainName: 'is-trolli.ng',
@@ -271,6 +266,11 @@ function getRouter({checkForDomain, getUser, prisma, saveFile, deleteFile, consu
         if (result !== null) {
             if (result.ownerId !== user.user.id) return res.send({success: true})
             else return res.status(400).send({success: false, error: 'Subdomain taken'})
+        }
+        try {
+            await consumeRatelimit(req.path, user.id)
+        } catch {
+            return res.status(429).send({success: false, error: 'You are being ratelimited.'})
         }
         try {
             await prisma.subdomain.delete({
