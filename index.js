@@ -28,6 +28,7 @@ const prisma = new PrismaClient()
 const {getUser} = require('./util/authFunctions')(prisma)
 
 app.use(express.json())
+app.use(express.urlencoded({extended: true}))
 
 app.use('/static', express.static('static'))
 app.use('/dist', express.static('dist'))

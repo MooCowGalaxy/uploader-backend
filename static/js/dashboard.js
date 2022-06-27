@@ -536,7 +536,6 @@ const pages = {
                 if ($('#page-embed-input-title').val() !== original.embedSiteTitle) return true
                 if ($('#page-embed-input-description').val() !== original.embedSiteDescription) return true
                 return $('#page-embed-input-color').val() !== original.embedColor;
-
             }
             $('#page-embed-save').click(() => {
                 if (getError()) return;
@@ -796,7 +795,6 @@ const pages = {
             </svg> Copy Link`)}, 1500)
                             })
                             $(`#i-${image.fileId}-download`).click(() => {
-                                console.log('h')
                                 let link = document.createElement("a")
                                 link.download = `${image.fileId}.${image.extension}`
                                 link.href = `/raw/${image.fileId}.${image.extension}`
