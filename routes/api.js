@@ -73,15 +73,15 @@ function getRouter({checkForDomain, getUser, prisma, saveFile, deleteFile, consu
     api.post('/user/link', async (req, res) => {
         const user = await getUser(req)
         if (!user) return res.status(401).send({success: false, error: 'Unauthorized'})
+        const body = req.body
+        if (typeof body !== "object") return res.status(400).send({success: false, error: 'Bad Request'})
+        if (typeof body.type !== 'number') return res.status(400).send({success: false, error: 'Bad Request'})
+        if (body.type > 2 || body.type < 0) return res.status(400).send({success: false, error: 'Bad Request'})
         try {
             await consumeRatelimit(req.path, user.id)
         } catch {
             return res.status(429).send({success: false, error: 'You are being ratelimited.'})
         }
-        const body = req.body
-        if (typeof body !== "object") return res.status(400).send({success: false, error: 'Bad Request'})
-        if (typeof body.type !== 'number') return res.status(400).send({success: false, error: 'Bad Request'})
-        if (body.type > 2 || body.type < 0) return res.status(400).send({success: false, error: 'Bad Request'})
         await prisma.settings.update({
             where: {
                 userId: user.user.id
@@ -103,11 +103,6 @@ function getRouter({checkForDomain, getUser, prisma, saveFile, deleteFile, consu
     api.post('/user/embed', async (req, res) => {
         const user = await getUser(req)
         if (!user) return res.status(401).send({success: false, error: 'Unauthorized'})
-        try {
-            await consumeRatelimit(req.path, user.id)
-        } catch {
-            return res.status(429).send({success: false, error: 'You are being ratelimited.'})
-        }
         const body = req.body
         if (typeof body !== "object") return res.status(400).send({success: false, error: 'Bad Request'})
         for (let key of Object.keys(body)) {
@@ -124,6 +119,12 @@ function getRouter({checkForDomain, getUser, prisma, saveFile, deleteFile, consu
         if (body.color !== undefined) {
             if (body.color.length !== 7) return res.status(400).send({success: false, error: 'Bad Request'})
             if (isNaN(parseInt(body.color.slice(1), 16))) return res.status(400).send({success: false, error: 'Bad Request'})
+        }
+
+        try {
+            await consumeRatelimit(req.path, user.id)
+        } catch {
+            return res.status(429).send({success: false, error: 'You are being ratelimited.'})
         }
 
         user.user.settings.embedColor = body.color !== undefined ? body.color : user.user.settings.embedColor
@@ -198,11 +199,6 @@ function getRouter({checkForDomain, getUser, prisma, saveFile, deleteFile, consu
     api.post('/user/image/delete/:id', async (req, res) => {
         const user = await getUser(req)
         if (!user) return res.status(401).send({success: false, error: 'Unauthorized'})
-        try {
-            await consumeRatelimit('/api/user/image/delete', user.id)
-        } catch {
-            return res.status(429).send({success: false, error: 'You are being ratelimited.'})
-        }
         const id = req.params.id
         if (!id) return res.status(400).send({success: false, error: 'Bad Request'})
         let image = await prisma.image.findFirst({
@@ -212,6 +208,11 @@ function getRouter({checkForDomain, getUser, prisma, saveFile, deleteFile, consu
             }
         })
         if (image === null) return res.status(400).send({success: false, error: 'Image not found'})
+        try {
+            await consumeRatelimit('/user/image/delete', user.id)
+        } catch {
+            return res.status(429).send({success: false, error: 'You are being ratelimited.'})
+        }
         try {
             await deleteFile(`${id}.${image.extension}`)
         } catch {}
@@ -248,11 +249,6 @@ function getRouter({checkForDomain, getUser, prisma, saveFile, deleteFile, consu
     api.post('/user/domains', async (req, res) => {
         const user = await getUser(req)
         if (!user) return res.status(401).send({success: false, error: 'Unauthorized'})
-        try {
-            await consumeRatelimit(req.path, user.id)
-        } catch {
-            return res.status(429).send({success: false, error: 'You are being ratelimited.'})
-        }
         const subdomain = req.body.subdomain
         if (!subdomain || typeof subdomain !== 'string' || subdomain.length === 0 || subdomain.length > 20) return res.status(400).send({success: false, error: 'Bad Request'})
         let allowed = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890'.split('')
@@ -260,6 +256,11 @@ function getRouter({checkForDomain, getUser, prisma, saveFile, deleteFile, consu
             if (!allowed.includes(character)) {
                 return res.status(400).send({success: false, error: 'Bad Request'})
             }
+        }
+        try {
+            await consumeRatelimit(req.path, user.id)
+        } catch {
+            return res.status(429).send({success: false, error: 'You are being ratelimited.'})
         }
         let result = await prisma.subdomain.findFirst({
             where: {
@@ -350,13 +351,6 @@ function getRouter({checkForDomain, getUser, prisma, saveFile, deleteFile, consu
         // check: API key
         if (user === null) return res.status(401).json({success: false, error: "Invalid key"})
 
-        // check: ratelimits
-        try {
-            await consumeRatelimit(req.path, user.id)
-        } catch {
-            return res.status(429).send({success: false, error: 'You are being ratelimited.'})
-        }
-
         userCache[user.id] = {
             data: user,
             lastUpdated: Date.now()
@@ -380,6 +374,14 @@ function getRouter({checkForDomain, getUser, prisma, saveFile, deleteFile, consu
         let extension = file.originalname.split('.').slice(-1)
         if (extension.length > 0) extension = extension[0]
         else return res.status(400).json({success: false, error: 'Invalid file extension'})
+
+        // check: ratelimits
+        try {
+            await consumeRatelimit(req.path, user.id)
+        } catch {
+            return res.status(429).send({success: false, error: 'You are being ratelimited.'})
+        }
+
         let fileId = createTokenString(9)
         let fileName = `${fileId}.${extension}`
         let fileAlias = [fileId, createEmojiString(4), createZWSString(20)][user.settings.linkType]
