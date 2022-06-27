@@ -28,9 +28,6 @@ module.exports = (prisma) => {
                     discordId: BigInt(user.id),
                     discordTag: tag,
                     apiKey: createTokenString(20),
-                    settings: {
-                        create: {}
-                    },
                     createdAt: now
                 },
                 include: {
@@ -39,6 +36,17 @@ module.exports = (prisma) => {
             })
             if (parseInt(u.createdAt) === now) {
                 global.totalUsers++
+            }
+            if (!u.settings) {
+                u.settings = await prisma.settings.create({
+                    data: {
+                        user: {
+                            connect: {
+                                id: u.id
+                            }
+                        }
+                    }
+                })
             }
             return user
         } catch (e) {
