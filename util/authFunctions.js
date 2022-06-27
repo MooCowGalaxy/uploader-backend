@@ -37,7 +37,7 @@ module.exports = (prisma) => {
                     settings: true
                 }
             })
-            if (u.createdAt === now) {
+            if (parseInt(u.createdAt) === now) {
                 global.totalUsers++
             }
             return user
