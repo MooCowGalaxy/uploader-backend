@@ -69,6 +69,8 @@ model Domain {
   ownerId    Int
   public     Boolean
   created    BigInt
+  cloudflareId String? @db.VarChar(32)
+  status     DomainStatus @default(INACTIVE)
   subdomains Subdomain[]
 }
 
@@ -96,4 +98,10 @@ enum Role {
   USER
   DONATOR
   DEVELOPER
+}
+
+enum DomainStatus {
+  INACTIVE
+  PENDING_NS
+  ACTIVE
 }
