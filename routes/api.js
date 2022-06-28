@@ -449,10 +449,12 @@ function getRouter({checkForDomain, getUser, prisma, saveFile, deleteFile, consu
         }
 
         let cfRes;
+        const cfReq = {name: domain, account: {id: config.cloudflare.accountId}, jump_start: false, type: 'full'}
         try {
-            cfRes = await cf.zones.add({name: domain, account: {id: config.cloudflare.accountId}, jump_start: false, type: 'full'})
+            cfRes = await cf.zones.add(cfReq)
         } catch (e) {
             console.error(e)
+            console.error(cfReq)
             return res.status(400).send({success: false, error: 'Domain processing failed'})
         }
         if (!cfRes.success) {
