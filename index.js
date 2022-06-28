@@ -36,7 +36,7 @@ app.use(express.json())
 app.use(express.urlencoded({extended: true}))
 
 app.use((req, res, next) => {
-    if (req.path.endsWith('.map') && config.production) return res.status(404)
+    if (req.path.endsWith('.map') && config.production) return res.status(404).send('File not found')
     else next()
 })
 
