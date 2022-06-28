@@ -35,6 +35,11 @@ const cf = require('cloudflare')({
 app.use(express.json())
 app.use(express.urlencoded({extended: true}))
 
+app.use((req, res, next) => {
+    if (req.path.endsWith('.map') && config.production) return res.status(404)
+    else next()
+})
+
 app.use('/static', express.static('static'))
 app.use('/dist', express.static('dist'))
 app.get('/dist/tw/index.min.js', (req, res) => {
