@@ -1,6 +1,7 @@
 const express = require("express");
 const {humanReadableBytes, createTokenString, createEmojiString, createZWSString, decodeZWSString} = require("../util/functions");
 const sizeOfImage = require("image-size");
+const config = require('../config.json')
 const upload = require('multer')()
 let fileTypeFromBuffer;
 import('file-type').then(module => {
@@ -9,7 +10,7 @@ import('file-type').then(module => {
 
 const namespace = '/api'
 
-function getRouter({checkForDomain, getUser, prisma, saveFile, deleteFile, consumeRatelimit}) {
+function getRouter({checkForDomain, getUser, prisma, saveFile, deleteFile, consumeRatelimit, cf}) {
     const api = express.Router()
 
     const statsHistoryCache = {
@@ -241,25 +242,273 @@ function getRouter({checkForDomain, getUser, prisma, saveFile, deleteFile, consu
 
         res.send({success: true})
     })
-    /* api.get('/domains', async (req, res) => {
+    /* api.get('/checkDomains', async (req, res) => {
         const user = await getUser(req)
-        if (!user) return res.status(401).send({success: false, error: 'Unauthorized'})
-        res.send({success: true, domains: ['is-trolli.ng']})
+        if (!user || user.user.id !== 1) return res.status(401).send({success: false, error: 'Unauthorized'})
+        const checkNS = require('../util/checkCFPending')
+        try {
+            await checkNS({cf, prisma})
+        } catch (e) {
+            return res.send({success: false, error: e.toString(), stack: e.stack})
+        }
+        res.send({success: true})
     }) */
-    api.post('/user/domains', async (req, res) => {
+    api.get('/domains', async (req, res) => {
         const user = await getUser(req)
         if (!user) return res.status(401).send({success: false, error: 'Unauthorized'})
+        const domainList = await prisma.domain.findMany({
+            where: {
+                OR: [
+                    {public: true},
+                    {ownerId: user.user.id}
+                ],
+                AND: [
+                    {status: 'ACTIVE'}
+                ]
+            }
+        })
+        let domains = []
+        for (let domain of domainList) {
+            domains.push({
+                id: domain.id,
+                domain: domain.domain,
+                ownerId: domain.ownerId,
+                public: domain.public,
+                created: parseInt(domain.created)
+            })
+        }
+        res.send({success: true, domains})
+    })
+
+    api.get('/domains/self', async (req, res) => {
+        const user = await getUser(req)
+        if (!user) return res.status(401).send({success: false, error: 'Unauthorized'})
+        const privateDomainList = await prisma.domain.findMany({
+            where: {
+                ownerId: user.user.id
+            }
+        })
+        let domains = []
+        for (let domain of privateDomainList) {
+            domains.push({
+                id: domain.id,
+                domain: domain.domain,
+                status: domain.status,
+                ownerId: domain.ownerId,
+                public: domain.public,
+                created: parseInt(domain.created)
+            })
+        }
+        res.send({success: true, domains})
+    })
+    api.post('/domains/self/visibility', async (req, res) => {
+        const user = await getUser(req)
+        if (!user) return res.status(401).send({success: false, error: 'Unauthorized'})
+        if (req.body.constructor !== Object) return res.status(400).send({success: false, error: 'Invalid body'})
+
+        const domainId = req.body.domainId
+        if (typeof domainId !== 'number' ||
+            domainId < 1) return res.status(400).send({success: false, error: 'Invalid body'})
+        const domain = await prisma.domain.findUnique({
+            where: {
+                id: domainId
+            }
+        })
+        if (domain === null) return res.status(404).send({success: false, error: 'Domain not found'})
+        if (domain.status !== 'ACTIVE') return res.status(400).send({success: false, error: 'Domain is not active'})
+        if (domain.ownerId !== user.user.id) return res.status(400).send({success: false, error: 'Missing permissions to edit domain'})
+
+        const isPublic = req.body.public
+        if (typeof isPublic !== 'boolean') return res.status(400).send({success: false, error: 'Invalid body'})
+        if (domain.public === isPublic) return res.send({success: true})
+
+        try {
+            await consumeRatelimit(req.path, user.id)
+        } catch {
+            return res.status(429).send({success: false, error: 'You are being ratelimited.'})
+        }
+
+        await prisma.domain.update({
+            where: {
+                id: domainId
+            },
+            data: {
+                public: isPublic
+            }
+        })
+        if (!isPublic) {
+            await prisma.subdomain.deleteMany({
+                where: {
+                    domain: {
+                        is: {
+                            id: domainId
+                        }
+                    },
+                    owner: {
+                        isNot: {
+                            id: user.user.id
+                        }
+                    }
+                }
+            })
+            await prisma.user.updateMany({
+                where: {
+                    OR: [
+                        {domain: domain.domain},
+                        {domain: {endsWith: `.${domain.domain}`}}
+                    ],
+                    NOT: {
+                        id: user.user.id
+                    }
+                },
+                data: {
+                    domain: 'is-trolli.ng'
+                }
+            })
+        }
+        res.send({success: true})
+    })
+
+    api.post('/user/domains/delete', async (req, res) => {
+        const user = await getUser(req)
+        if (!user) return res.status(401).send({success: false, error: 'Unauthorized'})
+        if (req.body.constructor !== Object) return res.status(400).send({success: false, error: 'Invalid body'})
+
+        const domainId = req.body.domainId
+        if (typeof domainId !== 'number' ||
+            domainId < 1) return res.status(400).send({success: false, error: 'Invalid body'})
+        const domain = await prisma.domain.findUnique({
+            where: {
+                id: domainId
+            }
+        })
+        if (domain === null) return res.status(404).send({success: false, error: 'Domain not found'})
+        if (domain.status !== 'ACTIVE') return res.status(400).send({success: false, error: 'Domain is not active'})
+        if (domain.ownerId !== user.user.id) return res.status(400).send({success: false, error: 'Missing permissions to edit domain'})
+
+        if (domain.id === 1) {
+            return res.status(400).send({success: false, error: `silly you can't delete the main domain!!`})
+        }
+
+        try {
+            await consumeRatelimit(req.path, user.id)
+        } catch {
+            return res.status(429).send({success: false, error: 'You are being ratelimited.'})
+        }
+
+        if (config.production) await cf.zones.del(domain.cloudflareId)
+        await prisma.subdomain.deleteMany({
+            where: {
+                domain: {
+                    is: {
+                        id: domainId
+                    }
+                }
+            }
+        })
+        await prisma.user.updateMany({
+            where: {
+                OR: [
+                    {domain: domain.domain},
+                    {domain: {endsWith: `.${domain.domain}`}}
+                ]
+            },
+            data: {
+                domain: 'is-trolli.ng'
+            }
+        })
+        await prisma.domain.delete({
+            where: {
+                id: domainId
+            }
+        })
+        res.send({success: true})
+    })
+
+    api.post('/user/domains/create', async (req, res) => {
+        const user = await getUser(req)
+        if (!user) return res.status(401).send({success: false, error: 'Unauthorized'})
+        if (req.body.constructor !== Object) return res.status(400).send({success: false, error: 'Invalid body type'})
+        const domain = req.body.domain
+        if (typeof domain !== 'string' ||
+            domain.length < 4 ||
+            domain.length > 200) return res.status(400).send({success: false, error: 'Invalid body'})
+        const regexp = /^([a-zA-Z0-9][\-a-zA-Z0-9]*\.)+[\-a-zA-Z0-9]{2,20}$/
+        if (!regexp.test(domain)) return res.status(400).send({success: false, error: 'Invalid domain'})
+        const duplicateDomain = await prisma.domain.findUnique({
+            where: {
+                domain
+            }
+        })
+        if (duplicateDomain !== null) return res.status(400).send({success: false, error: 'Domain is already registered'})
+
+        try {
+            await consumeRatelimit(req.path, user.id)
+        } catch {
+            return res.status(429).send({success: false, error: 'You are being ratelimited.'})
+        }
+
+        let cfRes;
+        try {
+            cfRes = await cf.zones.add({name: domain, account: {id: config.cloudflare.accountId}, jump_start: false, type: 'full'})
+        } catch (e) {
+            console.error(e)
+            return res.status(400).send({success: false, error: 'Domain processing failed'})
+        }
+        if (!cfRes.success) {
+            console.error(cfRes.errors)
+            return res.status(400).send({success: false, error: 'Domain processing failed'})
+        }
+        await prisma.domain.create({
+            data: {
+                domain,
+                owner: {
+                    connect: {
+                        id: user.user.id
+                    }
+                },
+                public: false,
+                created: Date.now(),
+                status: 'PENDING_NS',
+                cloudflareId: cfRes.result.id
+            }
+        })
+        res.send({
+            success: true,
+            originalNS: cfRes.result.original_name_servers,
+            newNS: cfRes.result.name_servers
+        })
+    })
+
+    api.post('/user/domains/domain', async (req, res) => {
+        const user = await getUser(req)
+        if (!user) return res.status(401).send({success: false, error: 'Unauthorized'})
+        if (req.body.constructor !== Object) return res.status(400).send({success: false, error: 'Invalid body type'})
+        const domainName = req.body.domain
+        if (typeof domainName !== 'string' ||
+            domainName.length < 4 || domainName.length > 200) return res.status(400).send({success: false, error: 'Invalid body'})
+        const domain = await prisma.domain.findUnique({
+            where: {
+                domain: domainName
+            }
+        })
+        if (domain === null) return res.status(404).send({success: false, error: 'Domain not found'})
+        if (domain.status !== 'ACTIVE') return res.status(400).send({success: false, error: 'Domain is not active'})
+        if (!domain.public && domain.ownerId !== user.user.id) return res.status(400).send({success: false, error: 'Missing permissions to use domain'})
+
+        // valid domain -------------------------------------------
+
         const subdomain = req.body.subdomain
-        if (!subdomain || typeof subdomain !== 'string' || subdomain.length === 0 || subdomain.length > 20) return res.status(400).send({success: false, error: 'Bad Request'})
+        if ((!subdomain && subdomain !== '') || typeof subdomain !== 'string' || subdomain.length > 20) return res.status(400).send({success: false, error: 'Invalid subdomain'})
         let allowed = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890'.split('')
         for (let character of subdomain) {
             if (!allowed.includes(character)) {
-                return res.status(400).send({success: false, error: 'Bad Request'})
+                return res.status(400).send({success: false, error: 'Invalid subdomain characters'})
             }
         }
         let result = await prisma.subdomain.findFirst({
             where: {
-                domainName: 'is-trolli.ng',
+                domainName: domain.domain,
                 subdomain
             }
         })
@@ -267,11 +516,15 @@ function getRouter({checkForDomain, getUser, prisma, saveFile, deleteFile, consu
             if (result.ownerId !== user.user.id) return res.send({success: true})
             else return res.status(400).send({success: false, error: 'Subdomain taken'})
         }
+
+        // valid subdomain ----------------------------------------
+
         try {
             await consumeRatelimit(req.path, user.id)
         } catch {
             return res.status(429).send({success: false, error: 'You are being ratelimited.'})
         }
+
         try {
             await prisma.subdomain.delete({
                 where: {
@@ -279,31 +532,34 @@ function getRouter({checkForDomain, getUser, prisma, saveFile, deleteFile, consu
                 }
             })
         } catch {}
-        await prisma.subdomain.create({
-            data: {
-                domain: {
-                    connect: {
-                        domain: 'is-trolli.ng'
-                    }
-                },
-                subdomain,
-                owner: {
-                    connect: {
-                        id: user.user.id
+        if (subdomain.length > 0) {
+            await prisma.subdomain.create({
+                data: {
+                    domain: {
+                        connect: {
+                            domain: domain.domain
+                        }
+                    },
+                    subdomain,
+                    owner: {
+                        connect: {
+                            id: user.user.id
+                        }
                     }
                 }
-            }
-        })
+            })
+        }
         await prisma.user.update({
             where: {
                 id: user.user.id
             },
             data: {
-                domain: `${subdomain}.is-trolli.ng`
+                domain: subdomain.length > 0 ? `${subdomain}.${domain.domain}` : domain.domain
             }
         })
         res.send({success: true})
     })
+
     api.get('/stats', async (req, res) => {
         res.json({
             dataUsed: humanReadableBytes(global.totalBytes),

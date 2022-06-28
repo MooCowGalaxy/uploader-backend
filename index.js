@@ -27,6 +27,11 @@ if (storageType === 'minio') setupCache().then(() => console.log('Cache set up s
 const prisma = new PrismaClient()
 const {getUser} = require('./util/authFunctions')(prisma)
 
+const cf = require('cloudflare')({
+    email: config.cloudflare.email,
+    key: config.cloudflare.key
+})
+
 app.use(express.json())
 app.use(express.urlencoded({extended: true}))
 
@@ -84,6 +89,7 @@ const options = {
     resolvePlaceholders,
     deleteFile,
     consumeRatelimit,
+    cf,
 }
 
 let middlewareCount = 0
@@ -120,7 +126,7 @@ for (let middleware of afterMiddleware) {
 }
 
 for (let file of fs.readdirSync('./tasks')) {
-    const task = require(`./tasks/${file}`)(prisma)
+    const task = require(`./tasks/${file}`)(options)
     nodeSchedule.scheduleJob(task.time, task.task)
     taskCount++
 }

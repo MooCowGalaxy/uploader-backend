@@ -8,19 +8,20 @@ datasource db {
 }
 
 model User {
-  id           Int        @id @default(autoincrement())
-  username     String     @db.VarChar(255)
-  discordId    BigInt     @unique
-  discordTag   String     @db.VarChar(255)
-  apiKey       String     @db.VarChar(20)
+  id           Int          @id @default(autoincrement())
+  username     String       @db.VarChar(255)
+  discordId    BigInt       @unique
+  discordTag   String       @db.VarChar(255)
+  apiKey       String       @db.VarChar(20)
   settings     Settings?
-  domain       String     @default("is-trolli.ng") @db.VarChar(255)
-  storageQuota Int        @default(10) // GB
-  uploadLimit  Int        @default(100) // MB
-  uploadCount  Int        @default(0)
-  bytesUsed    BigInt     @default(0)
+  domain       String       @default("is-trolli.ng") @db.VarChar(255)
+  storageQuota Int          @default(10) // GB
+  uploadLimit  Int          @default(100) // MB
+  uploadCount  Int          @default(0)
+  bytesUsed    BigInt       @default(0)
   createdAt    BigInt
-  role         Role       @default(USER)
+  donationTier DonationTier @default(NONE)
+  role         Role         @default(USER)
   domains      Domain[]
   images       Image[]
   Subdomain    Subdomain?
@@ -41,7 +42,7 @@ model Settings {
 
 model Image {
   id           Int     @id @default(autoincrement())
-  fileId       String  @db.VarChar(255) @unique
+  fileId       String  @unique @db.VarChar(255)
   originalName String  @db.Text
   size         BigInt
   timestamp    BigInt
@@ -63,15 +64,15 @@ model Stats {
 }
 
 model Domain {
-  id         Int         @id @default(autoincrement())
-  domain     String      @db.VarChar(255) @unique
-  owner      User        @relation(fields: [ownerId], references: [id])
-  ownerId    Int
-  public     Boolean
-  created    BigInt
-  cloudflareId String? @db.VarChar(32)
-  status     DomainStatus @default(INACTIVE)
-  subdomains Subdomain[]
+  id           Int          @id @default(autoincrement())
+  domain       String       @unique @db.VarChar(255)
+  owner        User         @relation(fields: [ownerId], references: [id])
+  ownerId      Int
+  public       Boolean
+  created      BigInt
+  cloudflareId String?      @db.VarChar(32)
+  status       DomainStatus @default(INACTIVE)
+  subdomains   Subdomain[]
 }
 
 model Subdomain {
@@ -87,7 +88,7 @@ model Token {
   id          Int    @id @default(autoincrement())
   user        User   @relation(fields: [userId], references: [discordId])
   userId      BigInt // discord ID
-  token       String @db.VarChar(255) @unique
+  token       String @unique @db.VarChar(255)
   bearerToken String @db.Text
   expires     Int
   cache       String @db.Text
@@ -104,4 +105,11 @@ enum DomainStatus {
   INACTIVE
   PENDING_NS
   ACTIVE
+}
+
+enum DonationTier {
+  NONE
+  GOLD
+  PLATINUM
+  DIAMOND
 }

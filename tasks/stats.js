@@ -1,4 +1,4 @@
-module.exports = (prisma) => {
+module.exports = ({prisma}) => {
     return {
         task: () => {
             (async () => {
