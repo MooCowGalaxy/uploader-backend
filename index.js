@@ -60,10 +60,14 @@ async function saveFile(fileName, buffer) {
 }
 async function resolvePlaceholders(text = "", user = {}, image = {}) {
     let newText = text;
-    newText = newText.replaceAll('[date]', new Date(parseInt(image.timestamp)).toUTCString().split(' ').slice(0, 4).join(' '))
-    newText = newText.replaceAll('[datetime]', new Date(parseInt(image.timestamp)).toUTCString())
-    newText = newText.replaceAll('[filesize]', humanReadableBytes(image.size))
-    newText = newText.replaceAll('[name]', `${image.fileId}.${image.extension}`)
+    try {
+        newText = newText.replaceAll('[date]', new Date(parseInt(image.timestamp)).toUTCString().split(' ').slice(0, 4).join(' '))
+        newText = newText.replaceAll('[datetime]', new Date(parseInt(image.timestamp)).toUTCString())
+        newText = newText.replaceAll('[filesize]', humanReadableBytes(parseInt(image.size)))
+        newText = newText.replaceAll('[name]', `${image.fileId}.${image.extension}`)
+    } catch (e) {
+        return newText;
+    }
     if (newText.includes("[dimensions]")) {
         if (image.width === null) {
             let dimensions = sizeOfImage(`${config.production ? config.savePathProd : config.savePathTest}/${image.fileId}.${image.extension}`)
