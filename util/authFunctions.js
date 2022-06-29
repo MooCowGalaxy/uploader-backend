@@ -34,7 +34,7 @@ module.exports = (prisma) => {
             if (parseInt(u.createdAt) === now) {
                 global.totalUsers++
             }
-            u.settings = await prisma.settings.findOne({
+            u.settings = await prisma.settings.find({
                 where: {
                     userId: u.id
                 }
