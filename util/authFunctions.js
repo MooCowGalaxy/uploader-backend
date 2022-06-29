@@ -29,14 +29,16 @@ module.exports = (prisma) => {
                     discordTag: tag,
                     apiKey: createTokenString(20),
                     createdAt: now
-                },
-                include: {
-                    settings: true
                 }
             })
             if (parseInt(u.createdAt) === now) {
                 global.totalUsers++
             }
+            u.settings = await prisma.settings.findOne({
+                where: {
+                    userId: u.id
+                }
+            })
             if (!u.settings) {
                 u.settings = await prisma.settings.create({
                     data: {

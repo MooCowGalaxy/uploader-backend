@@ -138,7 +138,7 @@ function getRouter({checkForDomain, getUser, prisma, saveFile, deleteFile, consu
         delete user.user.settings.linkType
         await prisma.settings.update({
             where: {
-                id: user.user.id
+                userId: user.user.id
             },
             data: user.user.settings
         })
