@@ -16,17 +16,17 @@ module.exports = {
     humanReadableBytes(bytes = 0) {
         if (typeof bytes === 'bigint') bytes = parseInt(bytes)
         if (bytes >= 1000 * 1000 * 1000 * 1000) {
-            return `${Math.round(bytes / (1000 * 1000 * 1000 * 10)) / 100} TB`
+            return `${Math.round(bytes / (1000 * 1000 * 1000 * 10)) / 100}TB`
         }
         if (bytes >= 1000 * 1000 * 1000) {
-            return `${Math.round(bytes / (1000 * 1000 * 10)) / 100} GB`
+            return `${Math.round(bytes / (1000 * 1000 * 10)) / 100}GB`
         }
         if (bytes >= 1000 * 1000) {
-            return `${Math.round(bytes / (1000 * 10)) / 100} MB`
+            return `${Math.round(bytes / (1000 * 10)) / 100}MB`
         } else if (bytes >= 1000) {
-            return `${Math.round(bytes / 10) / 100} KB`
+            return `${Math.round(bytes / 10) / 100}KB`
         } else {
-            return `${bytes} B`
+            return `${bytes}B`
         }
     },
     getCookie(req) {
