@@ -23,7 +23,7 @@ function getRouter({prisma, resolvePlaceholders}) {
         if (!(['png', 'jpg', 'gif'].includes(`${result.extension}`))) {
             return res.redirect(`https://cdn.uploader.tech/${result.ownerId}/${fileName}`)
         }
-        if (result.width === null) {
+        /* if (result.width === null) {
             let dimensions = sizeOfImage(`${config.production ? config.savePathProd : config.savePathTest}/${result.fileId}.${result.extension}`)
             await prisma.image.update({
                 where: {
@@ -35,16 +35,16 @@ function getRouter({prisma, resolvePlaceholders}) {
                     viewCount: {increment: 1}
                 }
             })
-        } else {
-            await prisma.image.update({
-                where: {
-                    fileId
-                },
-                data: {
-                    viewCount: {increment: 1}
-                }
-            })
-        }
+        } else { */
+        await prisma.image.update({
+            where: {
+                fileId
+            },
+            data: {
+                viewCount: {increment: 1}
+            }
+        })
+        // }
         result.viewCount++;
 
         let user = global.userCache[result.ownerId]
@@ -68,8 +68,9 @@ function getRouter({prisma, resolvePlaceholders}) {
         }
         if (!user.settings.embed) user.settings.embed = {}
         let embedSettings = {}
-        for (let entry of Object.entries(user.settings.embed)) {
-            if (entry[0] !== 'enabled') embedSettings[entry[0]] = await resolvePlaceholders(entry[1], user, result)
+        for (let entry of Object.entries(user.settings)) {
+            if (!entry[0].startsWith('embed')) continue;
+            if (entry[0] !== 'embedEnabled') embedSettings[entry[0]] = await resolvePlaceholders(entry[1], user, result)
             else embedSettings.enabled = entry[1]
         }
 
