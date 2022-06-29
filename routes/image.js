@@ -21,7 +21,7 @@ function getRouter({prisma, resolvePlaceholders}) {
         let fileName = `${result.fileId}.${result.extension}`
 
         if (!(['png', 'jpg', 'gif'].includes(`${result.extension}`))) {
-            return res.sendFile(path.resolve(`${config.production ? config.savePathProd : config.savePathTest}/${fileName}`))
+            return res.redirect(`https://cdn.uploader.tech/${result.ownerId}/${fileName}`)
         }
         if (result.width === null) {
             let dimensions = sizeOfImage(`${config.production ? config.savePathProd : config.savePathTest}/${result.fileId}.${result.extension}`)
