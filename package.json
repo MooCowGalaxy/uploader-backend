@@ -10,7 +10,7 @@
   "author": "MooCowGalaxy",
   "license": "ISC",
   "dependencies": {
-    "@prisma/client": "^3.15.2",
+    "@prisma/client": "^4.0.0",
     "@relaycorp/object-storage": "^1.4.37",
     "@tailwindcss/forms": "^0.5.2",
     "api": "^4.5.1",
@@ -27,13 +27,13 @@
     "mysql": "^2.18.1",
     "node-fetch": "^3.2.6",
     "node-schedule": "^2.1.0",
-    "prisma": "^3.15.2",
     "rate-limiter-flexible": "^2.3.7",
     "redis": "^4.1.0",
     "tw-elements": "^1.0.0-alpha12"
   },
   "devDependencies": {
     "@aws-sdk/types": "^3.110.0",
+    "prisma": "^4.0.0",
     "tailwindcss": "^3.1.4"
   }
 }
