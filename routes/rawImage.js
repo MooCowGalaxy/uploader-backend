@@ -1,5 +1,4 @@
 const express = require("express");
-const {renderFile} = require("../util/functions");
 const config = require("../config.json");
 let fileTypeFromBuffer;
 import('file-type').then(module => {
@@ -8,11 +7,12 @@ import('file-type').then(module => {
 
 const namespace = '/raw'
 
-function getRouter({prisma, getFile}) {
+function getRouter() {
     const rawImageRouter = express.Router()
 
     rawImageRouter.get('/:id', async (req, res) => {
-        let fileName = req.params.id
+        res.redirect(`https://cdn.${config.mainDomain}/${req.params.id}`)
+        /* let fileName = req.params.id
         let fileId = fileName.split('.').slice(0, -1).join(".")
 
         let result = await prisma.image.findFirst({
@@ -41,7 +41,7 @@ function getRouter({prisma, getFile}) {
             } catch {
                 res.status(404).send(await renderFile('notFound'))
             }
-        }
+        } */
     })
 
     return rawImageRouter

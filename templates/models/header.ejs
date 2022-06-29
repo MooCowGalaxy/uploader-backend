@@ -16,7 +16,7 @@
 <script src="/static/js/authorization.js"></script>
 <% if (image && embedSettings.enabled) { %>
     <meta name="twitter:card" content="summary_large_image">
-    <meta property="og:image" content="<%= `/raw/${imageData.fileId}.${imageData.extension}` %>">
+    <meta property="og:image" content="<%= `https://cdn.uploader.tech/${imageData.ownerId}/${imageData.fileId}.${imageData.extension}` %>">
     <link type="application/json+oembed" href="/api/embed">
     <meta name="theme-color" content="<%= user.settings.color ? user.settings.color : '#000000' %>">
     <meta property="og:site_name" content="<%= embedSettings.siteName %>">
@@ -24,7 +24,10 @@
     <meta name="og:description" content="<%= embedSettings.description %>">
 <% } else if (image) { %>
     <meta name="twitter:card" content="summary_large_image">
-    <meta property="og:image" content="<%= `/raw/${imageData.fileId}.${imageData.extension}` %>">
-    <meta name="twitter:image" content="<%= `/raw/${imageData.fileId}.${imageData.extension}` %>">
-    <meta name="twitter:image:src" content="<%= `/raw/${imageData.fileId}.${imageData.extension}` %>">
+    <meta property="og:image" content="<%= `https://cdn.uploader.tech/${imageData.ownerId}/${imageData.fileId}.${imageData.extension}` %>">
+    <meta name="twitter:image" content="<%= `https://cdn.uploader.tech/${imageData.ownerId}/${imageData.fileId}.${imageData.extension}` %>">
+    <meta name="twitter:image:src" content="<%= `https://cdn.uploader.tech/${imageData.ownerId}/${imageData.fileId}.${imageData.extension}` %>">
+<% } else { %>
+    <meta name="og:title" content="Uploader">
+    <meta name="og:description" content="A free ShareX image host!">
 <% } %>

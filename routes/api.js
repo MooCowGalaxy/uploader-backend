@@ -643,7 +643,7 @@ function getRouter({checkForDomain, getUser, prisma, saveFile, deleteFile, consu
         let fileId = createTokenString(9)
         let fileName = `${fileId}.${extension}`
         let fileAlias = [fileId, createEmojiString(4), createZWSString(20)][user.settings.linkType]
-        await saveFile(fileName, file.buffer)
+        await saveFile(`${user.id}/${fileName}`, file.buffer)
 
         let url = `https://${user.domain}/${user.settings.linkType === 2 ? decodeZWSString(fileAlias) : fileAlias}`
         let dimensions = ['png', 'jpg', 'jpeg', 'gif'].includes(extension) ? sizeOfImage(file.buffer) : {width: 0, height: 0}
