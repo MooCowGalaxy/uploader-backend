@@ -383,7 +383,7 @@ function getRouter({checkForDomain, getUser, prisma, saveFile, deleteFile, consu
             }
         })
         if (domain === null) return res.status(404).send({success: false, error: 'Domain not found'})
-        if (domain.status !== 'ACTIVE') return res.status(400).send({success: false, error: 'Domain is not active'})
+        // if (domain.status !== 'ACTIVE') return res.status(400).send({success: false, error: 'Domain is not active'})
         if (domain.ownerId !== user.user.id) return res.status(400).send({success: false, error: 'Missing permissions to edit domain'})
 
         if (domain.id === 1) {
