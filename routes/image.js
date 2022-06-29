@@ -66,7 +66,6 @@ function getRouter({prisma, resolvePlaceholders}) {
         } else {
             user = user.data
         }
-        if (!user.settings.embed) user.settings.embed = {}
         let embedSettings = {}
         for (let entry of Object.entries(user.settings)) {
             if (!entry[0].startsWith('embed')) continue;
