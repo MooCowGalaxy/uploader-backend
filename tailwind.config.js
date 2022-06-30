@@ -1,4 +1,5 @@
 module.exports = {
+  darkMode: 'class',
   content: [
       './templates/*.ejs',
       './templates/models/*.ejs',

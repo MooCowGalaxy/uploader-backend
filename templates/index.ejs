@@ -5,7 +5,7 @@
     <%- include('models/header.ejs', {image: false, production}) %>
     <script src="/static/js/index.js"></script>
 </head>
-<body class="min-h-screen">
+<body class="min-h-screen bg-white dark:bg-slate-900">
 <%- include('models/navbar.ejs') %>
 <div class="container max-w-8xl mx-auto pt-10 sm:pt-14 md:pt-16 lg:pt-20 pb-5 px-5 relative">
     <section class="my-16 transition-on-load">
@@ -28,8 +28,8 @@
                 <img src="/static/img/speedometer.svg" alt="" class="hidden md:inline-block align-middle rounded-xl max-w-full max-h-28 sm:max-h-36 md:max-h-48 h-full w-full mx-auto">
             </div>
             <div class="flex-1 mb-0 mr-8 order-1">
-                <h1 class="text-blue-800 font-bold text-3xl mb-2">Bypass Discord upload limits</h1>
-                <p class="text-gray-600 text-lg">Instead of being confined to 8MB upload limits (without Nitro), upload files up to 100MB for <b>free</b>!</p>
+                <h1 class="text-title font-bold text-3xl mb-2">Bypass Discord upload limits</h1>
+                <p class="text-description text-lg">Instead of being confined to 8MB upload limits (without Nitro), upload files up to 100MB for <b>free</b>!</p>
             </div>
         </section>
         <section class="relative d-flex-row flex-wrap-i transition-on-load mb-12 md:mb-20">
@@ -38,8 +38,8 @@
                 <img src="https://cdn.uploader.tech/1/7vtZZgBOz.png" alt="" class="shadow-xl rounded-xl hidden md:inline-block md:max-w-md lg:max-w-lg lg:max-w-xl 2xl:w-full">
             </div>
             <div class="flex-1 md:text-right order-1 md:order-2 mb-6 md:mb-0 md:ml-8">
-                <h1 class="text-blue-800 font-bold text-3xl mb-2">Fully featured control panel</h1>
-                <p class="text-gray-600 text-lg">Adjust every aspect of your images with just one click.<br>Change Discord embed settings, image domains, URL settings and more all from one page.</p>
+                <h1 class="text-title font-bold text-3xl mb-2">Fully featured control panel</h1>
+                <p class="text-description text-lg">Adjust every aspect of your images with just one click.<br>Change Discord embed settings, image domains, URL settings and more all from one page.</p>
             </div>
         </section>
         <section class="relative d-flex-row flex-wrap-i transition-on-load mb-12 md:mb-20">
@@ -48,12 +48,12 @@
                 <img src="https://cdn.uploader.tech/1/8pEStj6p1.png" alt="" class="shadow-xl rounded-xl hidden md:inline-block md:max-w-md lg:max-w-lg lg:max-w-xl 2xl:w-full">
             </div>
             <div class="flex-1 order-1 mb-6 md:mb-0 md:mr-8">
-                <h1 class="text-blue-800 font-bold text-3xl mb-2">Custom embeds</h1>
-                <p class="text-gray-600 text-lg">Create custom embeds to show off your image! See how your embed will look while editing it.</p>
+                <h1 class="text-title font-bold text-3xl mb-2">Custom embeds</h1>
+                <p class="text-description text-lg">Create custom embeds to show off your image! See how your embed will look while editing it.</p>
             </div>
         </section>
         <div>
-            <h1 class="text-2xl font-semibold text-center mb-16 transition-on-load">There's more...</h1>
+            <h1 class="text-2xl font-semibold text-black dark:text-white text-center mb-16 transition-on-load">There's more...</h1>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" id="feature-list">
                 <div class="transition-on-load">
@@ -106,7 +106,7 @@
         </div>
     </div>
 </div>
-<div class="bg-blue-100">
+<div class="bg-blue-100 dark:bg-blue-900/50">
     <section class="relative">
         <div class="custom-shape-divider-2">
             <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
