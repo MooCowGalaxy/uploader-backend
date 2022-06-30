@@ -1,5 +1,52 @@
 let isLoggedIn = false;
 
+let darkMode = window.localStorage.getItem('dark')
+if (darkMode === null) {
+    if (window.matchMedia) {
+        if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            darkMode = true
+        }
+    }
+    if (!darkMode) darkMode = false
+    window.localStorage.setItem('dark', darkMode)
+    if (darkMode) {
+        document.documentElement.classList.add('dark')
+    } else {
+        document.documentElement.classList.remove('dark')
+    }
+}
+
+function isDarkMode() {
+    return window.localStorage.getItem('dark') === 'true'
+}
+function setIcon() {
+    document.getElementById('navbar-dark').innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="${isLoggedIn ? 'block ' : ''}text-white h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+    ${isDarkMode() ?
+        '<path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />' :
+        '<path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />'}
+</svg>`
+}
+function setListener() {
+    let el = document.getElementById('navbar-dark')
+    if (el) {
+        setIcon()
+        el.onclick = () => {
+            window.localStorage.setItem('dark', (!isDarkMode()).toString())
+            if (isDarkMode()) {
+                document.documentElement.classList.add('dark')
+            } else {
+                document.documentElement.classList.remove('dark')
+            }
+            setIcon()
+        }
+    }
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    if (isDarkMode()) document.querySelector('html').classList.add('dark')
+    setListener()
+});
+
 const entityMap = {
     '&': '&amp;',
     '<': '&lt;',
@@ -72,14 +119,18 @@ if (document.cookie.length > 0 && document.cookie.includes('token')) {
                     if (window.location.pathname.startsWith('/dashboard')) {
                         setupDropdown()
                     } else if (document.getElementById('navbar') !== null) {
+                        $('#nav-dropdown').addClass('inline-block')
                         $('#nav-dropdown').html(`
-                        <button class="text-white" id="navbar-dropdown">${tag} <i class="bi bi-chevron-down" id="navbar-dropdown-icon"></i><i class="bi bi-chevron-up hidden" id="navbar-dropdown-icon-focus"></i></button>
+                        <button id="navbar-dark" class="rounded-full mr-2 align-middle inline-block no-transition"></button>
+                        <button class="text-white align-middle inline-block" id="navbar-dropdown">${tag} <i class="bi bi-chevron-down" id="navbar-dropdown-icon"></i><i class="bi bi-chevron-up hidden" id="navbar-dropdown-icon-focus"></i></button>
                         <div id="n-dropdown" class="origin-top-right absolute right-0 mt-2 w-40 rounded-md shadow-lg py-1 bg-white hidden" role="menu" aria-orientation="vertical" aria-labelledby="user-menu-button" tabindex="-1">
                             <a href="/dashboard" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-300" role="menuitem" tabindex="-1">Dashboard</a>
                             <a href="/auth/logout" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-300" role="menuitem" tabindex="-1">Sign out</a>
                         </div>
                     `);
                         setupDropdown()
+                        setIcon()
+                        setListener()
                     }
                 });
             }
