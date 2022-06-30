@@ -337,7 +337,7 @@ function getRouter({checkForDomain, getUser, prisma, saveFile, deleteFile, consu
             }
         })
         if (!isPublic) {
-            await prisma.subdomain.deleteMany({
+            /* await prisma.subdomain.deleteMany({
                 where: {
                     domain: {
                         is: {
@@ -350,7 +350,7 @@ function getRouter({checkForDomain, getUser, prisma, saveFile, deleteFile, consu
                         }
                     }
                 }
-            })
+            }) */
             await prisma.user.updateMany({
                 where: {
                     OR: [
@@ -397,7 +397,7 @@ function getRouter({checkForDomain, getUser, prisma, saveFile, deleteFile, consu
         }
 
         if (config.production) await cf.zones.del(domain.cloudflareId)
-        await prisma.subdomain.deleteMany({
+        /* await prisma.subdomain.deleteMany({
             where: {
                 domain: {
                     is: {
@@ -405,7 +405,7 @@ function getRouter({checkForDomain, getUser, prisma, saveFile, deleteFile, consu
                     }
                 }
             }
-        })
+        }) */
         await prisma.user.updateMany({
             where: {
                 OR: [
@@ -508,7 +508,7 @@ function getRouter({checkForDomain, getUser, prisma, saveFile, deleteFile, consu
                 return res.status(400).send({success: false, error: 'Invalid subdomain characters'})
             }
         }
-        let result = await prisma.subdomain.findFirst({
+        /* let result = await prisma.subdomain.findFirst({
             where: {
                 domainName: domain.domain,
                 subdomain
@@ -517,7 +517,7 @@ function getRouter({checkForDomain, getUser, prisma, saveFile, deleteFile, consu
         if (result !== null) {
             if (result.ownerId !== user.user.id) return res.send({success: true})
             else return res.status(400).send({success: false, error: 'Subdomain taken'})
-        }
+        } */
 
         // valid subdomain ----------------------------------------
 
@@ -527,7 +527,7 @@ function getRouter({checkForDomain, getUser, prisma, saveFile, deleteFile, consu
             return res.status(429).send({success: false, error: 'You are being ratelimited.'})
         }
 
-        try {
+        /* try {
             await prisma.subdomain.delete({
                 where: {
                     ownerId: user.user.id
@@ -550,7 +550,7 @@ function getRouter({checkForDomain, getUser, prisma, saveFile, deleteFile, consu
                     }
                 }
             })
-        }
+        } */
         await prisma.user.update({
             where: {
                 id: user.user.id

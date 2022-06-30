@@ -24,7 +24,7 @@ model User {
   role         Role         @default(USER)
   domains      Domain[]
   images       Image[]
-  Subdomain    Subdomain?
+  // Subdomain    Subdomain?
   Token        Token[]
 }
 
@@ -72,17 +72,17 @@ model Domain {
   created      BigInt
   cloudflareId String?      @db.VarChar(32)
   status       DomainStatus @default(INACTIVE)
-  subdomains   Subdomain[]
+  // subdomains   Subdomain[]
 }
 
-model Subdomain {
-  id         Int    @id @default(autoincrement())
-  domain     Domain @relation(fields: [domainName], references: [domain])
-  domainName String @db.VarChar(255)
-  subdomain  String @db.VarChar(20)
-  owner      User   @relation(fields: [ownerId], references: [id])
-  ownerId    Int    @unique
-}
+// model Subdomain {
+//   id         Int    @id @default(autoincrement())
+//   domain     Domain @relation(fields: [domainName], references: [domain])
+//   domainName String @db.VarChar(255)
+//   subdomain  String @db.VarChar(20)
+//   owner      User   @relation(fields: [ownerId], references: [id])
+//   ownerId    Int    @unique
+// }
 
 model Token {
   id          Int    @id @default(autoincrement())
