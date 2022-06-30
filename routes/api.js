@@ -242,7 +242,7 @@ function getRouter({checkForDomain, getUser, prisma, saveFile, deleteFile, consu
 
         res.send({success: true})
     })
-    /* api.get('/checkDomains', async (req, res) => {
+    api.get('/checkDomains', async (req, res) => {
         const user = await getUser(req)
         if (!user || user.user.id !== 1) return res.status(401).send({success: false, error: 'Unauthorized'})
         const checkNS = require('../util/checkCFPending')
@@ -252,7 +252,7 @@ function getRouter({checkForDomain, getUser, prisma, saveFile, deleteFile, consu
             return res.send({success: false, error: e.toString(), stack: e.stack})
         }
         res.send({success: true})
-    }) */
+    })
     api.get('/domains', async (req, res) => {
         const user = await getUser(req)
         if (!user) return res.status(401).send({success: false, error: 'Unauthorized'})

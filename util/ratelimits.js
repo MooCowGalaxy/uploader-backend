@@ -7,7 +7,7 @@ const routes = [
     ['/user/embed', [10, 60]],
     ['/user/images', [20, 60]],
     ['/user/image/delete', [15, 60]],
-    ['/user/domains/create', [1, 300]],
+    ['/user/domains/create', [3, 600]],
     ['/user/domains/delete', [1, 120]],
     ['/user/domains/domain', [8, 60]],
     ['/domains/self/visibility', [8, 120]],
