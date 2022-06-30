@@ -5,10 +5,10 @@
 
 */
 -- DropForeignKey
-ALTER TABLE `subdomain` DROP FOREIGN KEY `Subdomain_domainName_fkey`;
+ALTER TABLE `Subdomain` DROP FOREIGN KEY `Subdomain_domainName_fkey`;
 
 -- DropForeignKey
-ALTER TABLE `subdomain` DROP FOREIGN KEY `Subdomain_ownerId_fkey`;
+ALTER TABLE `Subdomain` DROP FOREIGN KEY `Subdomain_ownerId_fkey`;
 
 -- DropTable
-DROP TABLE `subdomain`;
+DROP TABLE `Subdomain`;
