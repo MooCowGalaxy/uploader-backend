@@ -10,7 +10,7 @@ import('file-type').then(module => {
 
 const namespace = '/api'
 
-function getRouter({checkForDomain, getUser, prisma, saveFile, deleteFile, consumeRatelimit, cf}) {
+function getRouter({checkForDomain, getUser, prisma, saveFile, deleteFile, consumeRatelimit, cf, resolvePlaceholders}) {
     const api = express.Router()
 
     const statsHistoryCache = {
@@ -40,6 +40,32 @@ function getRouter({checkForDomain, getUser, prisma, saveFile, deleteFile, consu
 
     api.get('/embed', async (req, res) => {
         res.send({type: 'link', version: '1.0'})
+    })
+    api.get('/embed/:fileId', async (req, res) => {
+        const fileId = req.params.fileId
+        if (typeof fileId !== 'string' || fileId.length > 12 || fileId.length < 6) return res.status(400).send({error: true, message: 'Bad Request'})
+        const image = await prisma.image.findUnique({
+            where: {
+                fileId: fileId
+            },
+            include: {
+                owner: {
+                    include: {
+                        settings: true
+                    }
+                }
+            }
+        })
+        if (image === null) return res.status(404).send({error: true, message: 'User not found'})
+        const user = image.owner
+        res.json({
+            type: 'link',
+            version: '1.0',
+            provider_url: await resolvePlaceholders(user.settings.embedSiteNameLink, user, image),
+            provider_name: await resolvePlaceholders(user.settings.embedSiteName, user, image),
+            author_url: await resolvePlaceholders(user.settings.embedSiteAuthorLink, user, image),
+            author_name: await resolvePlaceholders(user.settings.embedSiteAuthor, user, image)
+        })
     })
     api.get('/user', async (req, res) => {
         const user = await getUser(req)
@@ -107,14 +133,15 @@ function getRouter({checkForDomain, getUser, prisma, saveFile, deleteFile, consu
         const body = req.body
         if (typeof body !== "object") return res.status(400).send({success: false, error: 'Bad Request'})
         for (let key of Object.keys(body)) {
-            if (!['name', 'title', 'description', 'color', 'enabled'].includes(key)) return res.status(400).send({success: false, error: 'Bad Request'})
+            if (!['nameLink', 'name', 'authorLink', 'author', 'title', 'description', 'color', 'enabled'].includes(key)) return res.status(400).send({success: false, error: 'Bad Request'})
             if (key !== 'enabled' && typeof body[key] !== "string") return res.status(400).send({success: false, error: 'Bad Request'})
             if (key === 'enabled' && typeof body[key] !== "boolean") return res.status(400).send({success: false, error: 'Bad Request'})
         }
 
-        if ((body.name && body.name.length > 255) ||
+        if ((body.name && body.name.length > 255) || (body.nameLink && body.nameLink > 100) ||
+            (body.author && body.author.length > 255) || (body.authorLink && body.authorLink > 100) ||
             (body.title && body.title.length > 255) ||
-            (body.description && body.description.length > 500) ||
+            (body.description && body.description.length > 255) ||
             (body.color && body.color.length !== 7)) return res.status(400).send({success: false, error: 'Bad Request'})
 
         if (body.color !== undefined) {
@@ -131,6 +158,9 @@ function getRouter({checkForDomain, getUser, prisma, saveFile, deleteFile, consu
         user.user.settings.embedColor = body.color !== undefined ? body.color : user.user.settings.embedColor
         user.user.settings.embedEnabled = body.enabled !== undefined ? body.enabled : user.user.settings.embedEnabled
         user.user.settings.embedSiteName = body.name !== undefined ? body.name : user.user.settings.embedSiteName
+        user.user.settings.embedSiteNameLink = body.nameLink !== undefined ? body.nameLink : user.user.settings.embedSiteNameLink
+        user.user.settings.embedSiteAuthor = body.author !== undefined ? body.author : user.user.settings.embedSiteAuthor
+        user.user.settings.embedSiteAuthorLink = body.authorLink !== undefined ? body.authorLink : user.user.settings.embedSiteAuthorLink
         user.user.settings.embedSiteTitle = body.title !== undefined ? body.title : user.user.settings.embedSiteTitle
         user.user.settings.embedSiteDescription = body.description !== undefined ? body.description : user.user.settings.embedSiteDescription
         delete user.user.settings.id

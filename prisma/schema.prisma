@@ -33,9 +33,12 @@ model Settings {
   user                 User    @relation(fields: [userId], references: [id])
   userId               Int     @unique
   linkType             Int     @default(0)
+  embedSiteAuthor      String  @default("") @db.VarChar(100)
+  embedSiteAuthorLink  String  @default("") @db.VarChar(100)
   embedSiteName        String  @default("") @db.VarChar(255)
+  embedSiteNameLink    String  @default("") @db.VarChar(100)
   embedSiteTitle       String  @default("") @db.VarChar(255)
-  embedSiteDescription String  @default("") @db.VarChar(500)
+  embedSiteDescription String  @default("") @db.VarChar(255)
   embedColor           String  @default("#000000") @db.VarChar(7)
   embedEnabled         Boolean @default(false)
 }

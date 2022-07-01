@@ -17,9 +17,8 @@
 <% if (image && embedSettings.enabled) { %>
     <meta name="twitter:card" content="summary_large_image">
     <meta property="og:image" content="<%= `https://cdn.uploader.tech/${imageData.ownerId}/${imageData.fileId}.${imageData.extension}` %>">
-    <link type="application/json+oembed" href="/api/embed">
+    <link type="application/json+oembed" href="/api/embed/<%= imageData.fileId %>">
     <meta name="theme-color" content="<%= embedSettings.embedColor ? embedSettings.embedColor : '#000000' %>">
-    <meta property="og:site_name" content="<%= embedSettings.embedSiteName %>">
     <meta name="og:title" content="<%= embedSettings.embedSiteTitle %>">
     <meta name="og:description" content="<%= embedSettings.embedSiteDescription %>">
 <% } else if (image) { %>
