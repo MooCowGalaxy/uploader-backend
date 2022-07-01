@@ -61,9 +61,9 @@ function getRouter({checkForDomain, getUser, prisma, saveFile, deleteFile, consu
         res.json({
             type: 'link',
             version: '1.0',
-            provider_url: await resolvePlaceholders(user.settings.embedSiteNameLink, user, image),
+            provider_url: user.settings.embedSiteName.length > 0 && user.settings.embedSiteNameLink.length === 0 ? 'https://uploader.tech' : user.settings.embedSiteNameLink,
             provider_name: await resolvePlaceholders(user.settings.embedSiteName, user, image),
-            author_url: await resolvePlaceholders(user.settings.embedSiteAuthorLink, user, image),
+            author_url: user.settings.embedSiteAuthor.length > 0 && user.settings.embedSiteAuthor === 0 ? 'https://uploader.tech' : user.settings.embedSiteAuthorLink,
             author_name: await resolvePlaceholders(user.settings.embedSiteAuthor, user, image)
         })
     })
