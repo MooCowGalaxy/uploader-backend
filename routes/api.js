@@ -532,12 +532,13 @@ function getRouter({checkForDomain, getUser, prisma, saveFile, deleteFile, consu
 
         const subdomain = req.body.subdomain
         if ((!subdomain && subdomain !== '') || typeof subdomain !== 'string' || subdomain.length > 20) return res.status(400).send({success: false, error: 'Invalid subdomain'})
-        let allowed = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890'.split('')
+        let allowed = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-'.split('')
         for (let character of subdomain) {
             if (!allowed.includes(character)) {
                 return res.status(400).send({success: false, error: 'Invalid subdomain characters'})
             }
         }
+        if (subdomain.startsWith('-') || subdomain.endsWith('-')) return res.status(400).send({success: false, error: 'Subdomain cannot start or end with -'})
         /* let result = await prisma.subdomain.findFirst({
             where: {
                 domainName: domain.domain,
