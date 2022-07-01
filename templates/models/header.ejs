@@ -16,11 +16,15 @@
 <script src="/static/js/authorization.js"></script>
 <% if (image && embedSettings.enabled) { %>
     <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="<%= `https://cdn.uploader.tech/${imageData.ownerId}/${imageData.fileId}.${imageData.extension}` %>">
+    <meta name="twitter:image:src" content="<%= `https://cdn.uploader.tech/${imageData.ownerId}/${imageData.fileId}.${imageData.extension}` %>">
     <meta property="og:image" content="<%= `https://cdn.uploader.tech/${imageData.ownerId}/${imageData.fileId}.${imageData.extension}` %>">
-    <link type="application/json+oembed" href="/api/embed/<%= imageData.fileId %>">
     <meta name="theme-color" content="<%= embedSettings.embedColor ? embedSettings.embedColor : '#000000' %>">
     <meta name="og:title" content="<%= embedSettings.embedSiteTitle %>">
+    <meta name="twitter:title" content="<%= embedSettings.embedSiteTitle %>">
     <meta name="og:description" content="<%= embedSettings.embedSiteDescription %>">
+    <meta name="twitter:description" content="<%= embedSettings.embedSiteDescription %>">
+    <link type="application/json+oembed" href="https://uploader.tech/api/embed/<%= imageData.fileId %>">
 <% } else if (image) { %>
     <meta name="twitter:card" content="summary_large_image">
     <meta property="og:image" content="<%= `https://cdn.uploader.tech/${imageData.ownerId}/${imageData.fileId}.${imageData.extension}` %>">
