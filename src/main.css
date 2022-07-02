@@ -312,10 +312,10 @@ html:not(.dark) .text-description {
     color: #75797d;
 }
 html:not(.dark) .text-title {
-    color: var(--light-accent-2);
+    color: #0063ce;
 }
 .dark .text-title {
-    color: var(--light-accent-2);
+    color: #067dff;
 }
 
 /* #navbar-dropdown:focus > #navbar-dropdown-icon {
@@ -371,6 +371,9 @@ code {
     border-radius: 0.25rem;
     background-color: rgba(0, 0, 0, 0.15);
     padding: 0.15rem 0.25rem;
+}
+.login {
+    color: #000;
 }
 html:not(.dark) code {
     color: var(--light-accent-2);
