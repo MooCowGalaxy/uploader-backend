@@ -628,7 +628,10 @@ function getRouter({checkForDomain, getUser, prisma, saveFile, deleteFile, consu
         let key = req.header("key")
         let file = req.file;
 
-        let user = await prisma.user.findFirst({
+        if (key === undefined) return res.status(401).json({success: false, message: 'Invalid key'})
+        console.log(key)
+
+        let user = await prisma.user.findUnique({
             where: {
                 apiKey: key
             },
@@ -638,7 +641,7 @@ function getRouter({checkForDomain, getUser, prisma, saveFile, deleteFile, consu
         })
 
         // check: API key
-        if (user === null) return res.status(401).json({success: false, error: "Invalid key"})
+        if (user === null) return res.status(401).json({success: false, message: "Invalid key"})
 
         userCache[user.id] = {
             data: user,
@@ -646,29 +649,29 @@ function getRouter({checkForDomain, getUser, prisma, saveFile, deleteFile, consu
         }
 
         // check: file in body
-        if (file.fieldname !== "file") return res.status(400).json({success: false, error: "Invalid file name"})
-        if (file.originalname.length > 255) return res.status(400).json({success: false, error: 'File name too long'})
+        if (file.fieldname !== "file") return res.status(400).json({success: false, message: "Invalid file name"})
+        if (file.originalname.length > 255) return res.status(400).json({success: false, message: 'File name too long'})
 
         let mimetype = await fileTypeFromBuffer(file.buffer)
 
         // check: valid file types
-        if (mimetype === undefined) return res.status(400).json({success: false, error: 'Invalid file type'})
-        if (!['png', 'jpg', 'jpeg', 'gif', 'mp4'].includes(mimetype.ext)) return res.status(400).json({success: false, error: 'Invalid file type'})
+        if (mimetype === undefined) return res.status(400).json({success: false, message: 'Invalid file type'})
+        if (!['png', 'jpg', 'jpeg', 'gif', 'mp4'].includes(mimetype.ext)) return res.status(400).json({success: false, message: 'Invalid file type'})
 
         // check: user quotas - upload limit
-        if (file.size > user.uploadLimit * 1000 * 1000) return res.status(400).json({success: false, error: 'Upload size limit exceeded'})
+        if (file.size > user.uploadLimit * 1000 * 1000) return res.status(400).json({success: false, message: 'Upload size limit exceeded'})
         // check: user quotas - storage limit
-        if (parseInt(user.bytesUsed) + file.size > user.storageQuota * 1000 * 1000 * 1000) return res.status(400).json({success: false, error: 'Storage quota exceeded'})
+        if (parseInt(user.bytesUsed) + file.size > user.storageQuota * 1000 * 1000 * 1000) return res.status(400).json({success: false, message: 'Storage quota exceeded'})
 
         let extension = file.originalname.split('.').slice(-1)
         if (extension.length > 0) extension = extension[0]
-        else return res.status(400).json({success: false, error: 'Invalid file extension'})
+        else return res.status(400).json({success: false, message: 'Invalid file extension'})
 
         // check: ratelimits
         try {
             await consumeRatelimit(req.path, user.id)
         } catch {
-            return res.status(429).send({success: false, error: 'You are being ratelimited.'})
+            return res.status(429).send({success: false, message: 'You are being ratelimited.'})
         }
 
         let fileId = createTokenString(9)
@@ -706,7 +709,7 @@ function getRouter({checkForDomain, getUser, prisma, saveFile, deleteFile, consu
             }
         })
 
-        res.json({error: false, message: "Uploaded!", url: url})
+        res.json({success: true, message: "Uploaded!", url: url})
     })
 
     return api

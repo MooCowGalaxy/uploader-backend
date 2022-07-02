@@ -12,7 +12,7 @@ model User {
   username     String       @db.VarChar(255)
   discordId    BigInt       @unique
   discordTag   String       @db.VarChar(255)
-  apiKey       String       @db.VarChar(20)
+  apiKey       String       @db.VarChar(20) @unique
   settings     Settings?
   domain       String       @default("is-trolli.ng") @db.VarChar(255)
   storageQuota Int          @default(10) // GB
