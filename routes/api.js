@@ -1,7 +1,9 @@
 const express = require("express");
-const {humanReadableBytes, createTokenString, createEmojiString, createZWSString, decodeZWSString} = require("../util/functions");
+const {humanReadableBytes, createTokenString, createEmojiString, createZWSString, decodeZWSString,
+       checkFeaturePermission, addFeaturePermission, removeFeaturePermission, featureMap} = require("../util/functions");
 const sizeOfImage = require("image-size");
 const config = require('../config.json')
+const convert = require('heic-convert')
 const upload = require('multer')()
 let fileTypeFromBuffer;
 import('file-type').then(module => {
@@ -624,12 +626,65 @@ function getRouter({checkForDomain, getUser, prisma, saveFile, deleteFile, consu
         })
     })
 
+    api.get('/admin/feature/:userId', async (req, res) => {
+        const user = await getUser(req)
+        if (!user) return res.status(401).send({success: false, error: 'Unauthorized'})
+        if (user.user.role !== 'DEVELOPER') return res.status(401).send({success: false, error: 'Unauthorized'})
+        const feature = req.body.feature
+        const userId = parseInt(req.params.userId)
+
+        if (!feature) return res.status(400).send({success: false, error: 'Feature is missing'})
+        if (!userId) return res.status(400).send({success: false, error: 'User ID is missing'})
+
+        let userFeature = await prisma.user.findUnique({
+            where: {
+                id: userId
+            }
+        })
+
+        // check: user ID
+        if (userFeature === null) return res.status(401).json({success: false, message: "Invalid user ID"})
+
+        res.send({success: true, feature, permission: checkFeaturePermission(userFeature.featureBit, feature)})
+    })
+    api.post('/admin/feature/:userId', async (req, res) => {
+        const user = await getUser(req)
+        if (!user) return res.status(401).send({success: false, error: 'Unauthorized'})
+        if (user.user.role !== 'DEVELOPER') return res.status(401).send({success: false, error: 'Unauthorized'})
+        const feature = req.body.feature
+        const permission = req.body.permission
+        const userId = parseInt(req.params.userId)
+
+        if (!feature) return res.status(400).send({success: false, error: 'Feature is missing'})
+        if (permission === undefined) return res.status(400).send({success: false, error: 'Permission is missing'})
+
+        let userFeature = await prisma.user.findUnique({
+            where: {
+                id: userId
+            }
+        })
+
+        // check: user ID
+        if (userFeature === null) return res.status(401).json({success: false, message: "Invalid user ID"})
+
+        const newPermission = permission ? addFeaturePermission(userFeature.featureBit, feature) : removeFeaturePermission(userFeature.featureBit, feature)
+        await prisma.user.update({
+            where: {
+                id: userId
+            },
+            data: {
+                featureBit: newPermission
+            }
+        })
+
+        res.send({success: true})
+    })
+
     api.post('/upload', upload.single('file'), async (req, res) => {
         let key = req.header("key")
         let file = req.file;
 
         if (key === undefined) return res.status(401).json({success: false, message: 'Invalid key'})
-        console.log(key)
 
         let user = await prisma.user.findUnique({
             where: {
@@ -656,12 +711,36 @@ function getRouter({checkForDomain, getUser, prisma, saveFile, deleteFile, consu
 
         // check: valid file types
         if (mimetype === undefined) return res.status(400).json({success: false, message: 'Invalid file type'})
-        if (!['png', 'jpg', 'jpeg', 'gif', 'mp4'].includes(mimetype.ext)) return res.status(400).json({success: false, message: 'Invalid file type'})
+        if (!['png', 'heic', 'jpg', 'jpeg', 'gif', 'mp4'].includes(mimetype.ext)) return res.status(400).json({success: false, message: 'Invalid file type'})
+
+        file.originalname = file.originalname.split('.').slice(0, -1).join('.') + `.${mimetype.ext}`
 
         // check: user quotas - upload limit
         if (file.size > user.uploadLimit * 1000 * 1000) return res.status(400).json({success: false, message: 'Upload size limit exceeded'})
         // check: user quotas - storage limit
         if (parseInt(user.bytesUsed) + file.size > user.storageQuota * 1000 * 1000 * 1000) return res.status(400).json({success: false, message: 'Storage quota exceeded'})
+
+        if (mimetype.ext === 'heic') {
+            if (!checkFeaturePermission(user.featureBit, 'HEIC_IMAGES')) return res.status(400).send({success: false, message: 'No permission to use HEIC files'})
+            let newBuffer;
+            try {
+                newBuffer = await convert({
+                    buffer: file.buffer,
+                    format: 'PNG'
+                })
+            } catch (e) {
+                return res.status(400).send({success: false, message: 'Invalid HEIC file'})
+            }
+
+            file.size = newBuffer.length
+            file.buffer = newBuffer
+            file.originalname = file.originalname.split('.').slice(0, -1).join('.') + `.png`
+
+            // check: user quotas - upload limit
+            if (file.size > user.uploadLimit * 1000 * 1000) return res.status(400).json({success: false, message: 'Upload size limit exceeded'})
+            // check: user quotas - storage limit
+            if (parseInt(user.bytesUsed) + file.size > user.storageQuota * 1000 * 1000 * 1000) return res.status(400).json({success: false, message: 'Storage quota exceeded'})
+        }
 
         let extension = file.originalname.split('.').slice(-1)
         if (extension.length > 0) extension = extension[0]

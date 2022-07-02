@@ -1,7 +1,21 @@
 const ejs = require("ejs")
 const config = require('../config.json')
 
+const featureMap = {
+    'HEIC_IMAGES': 0
+}
+
+function decimalToBinary(dec) {
+    return (dec >>> 0).toString(2);
+}
+
+function setCharAt(str,index,chr) {
+    if (index > str.length-1) return str;
+    return str.substring(0,index) + chr + str.substring(index+1);
+}
+
 module.exports = {
+    featureMap,
     renderFile(filename, data = {}) {
         data.discordInvite = config.discord.invite
         data.production = config.production
@@ -91,5 +105,31 @@ module.exports = {
             if (!zws.includes(str[i])) incl = false
         }
         return incl;
+    },
+    checkFeaturePermission(integer, feature) {
+        if (featureMap[feature] === undefined) throw new Error('Feature not found')
+        let binary = decimalToBinary(integer)
+        while (binary.length < 31) {
+            binary = `0${binary}`
+        }
+        return binary[featureMap[feature]] === '1'
+    },
+    addFeaturePermission(integer, feature) {
+        if (featureMap[feature] === undefined) throw new Error('Feature not found')
+        let binary = decimalToBinary(integer)
+        while (binary.length < 31) {
+            binary = `0${binary}`
+        }
+        binary = setCharAt(binary, featureMap[feature], '1')
+        return parseInt(binary, 2)
+    },
+    removeFeaturePermission(integer, feature) {
+        if (featureMap[feature] === undefined) throw new Error('Feature not found')
+        let binary = decimalToBinary(integer)
+        while (binary.length < 31) {
+            binary = `0${binary}`
+        }
+        binary = setCharAt(binary, featureMap[feature], '0')
+        return parseInt(binary, 2)
     }
 }

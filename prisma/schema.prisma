@@ -20,6 +20,7 @@ model User {
   uploadCount  Int          @default(0)
   bytesUsed    BigInt       @default(0)
   createdAt    BigInt
+  featureBit   Int          @default(0)
   donationTier DonationTier @default(NONE)
   role         Role         @default(USER)
   domains      Domain[]
