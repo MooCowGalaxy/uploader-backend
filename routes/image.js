@@ -20,7 +20,7 @@ function getRouter({prisma, resolvePlaceholders}) {
         if (result === null) return res.send(await renderFile('notFound'))
         let fileName = `${result.fileId}.${result.extension}`
 
-        if (!(['png', 'jpg', 'gif'].includes(`${result.extension}`))) {
+        if (!(['png', 'jpg', 'jpeg', 'gif'].includes(`${result.extension}`))) {
             return res.redirect(`https://cdn.uploader.tech/${result.ownerId}/${fileName}`)
         }
         /* if (result.width === null) {
