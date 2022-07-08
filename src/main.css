@@ -372,9 +372,6 @@ code {
     background-color: rgba(0, 0, 0, 0.15);
     padding: 0.15rem 0.25rem;
 }
-.login {
-    color: #000;
-}
 html:not(.dark) code {
     color: var(--light-accent-2);
 }
