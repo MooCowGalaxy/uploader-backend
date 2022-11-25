@@ -105,7 +105,7 @@ function getRouter({checkForDomain, getUser, prisma, saveFile, deleteFile, consu
         const body = req.body
         if (typeof body !== "object") return res.status(400).send({success: false, error: 'Bad Request'})
         if (typeof body.type !== 'number') return res.status(400).send({success: false, error: 'Bad Request'})
-        if (body.type > 2 || body.type < 0) return res.status(400).send({success: false, error: 'Bad Request'})
+        if (body.type > 3 || body.type < 0) return res.status(400).send({success: false, error: 'Bad Request'})
         try {
             await consumeRatelimit(req.path, user.id)
         } catch {
@@ -755,10 +755,15 @@ function getRouter({checkForDomain, getUser, prisma, saveFile, deleteFile, consu
 
         let fileId = createTokenString(9)
         let fileName = `${fileId}.${extension}`
-        let fileAlias = [fileId, createEmojiString(4), createZWSString(20)][user.settings.linkType]
+        let fileAlias = [fileId, createEmojiString(4), createZWSString(20), fileId][user.settings.linkType]
         await saveFile(`${user.id}/${fileName}`, file.buffer)
 
-        let url = `https://${user.domain}/${user.settings.linkType === 2 ? decodeZWSString(fileAlias) : fileAlias}`
+        let url
+        if (user.settings.linkType !== 3) {
+            url = `https://${user.domain}/${user.settings.linkType === 2 ? decodeZWSString(fileAlias) : fileAlias}`
+        } else {
+            url = `https://cdn.uploader.tech/${user.id}/${fileName}`
+        }
         let dimensions = ['png', 'jpg', 'jpeg', 'gif'].includes(extension) ? sizeOfImage(file.buffer) : {width: 0, height: 0}
 
         await prisma.image.create({

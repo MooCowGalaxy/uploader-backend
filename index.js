@@ -59,6 +59,8 @@ async function saveFile(fileName, buffer) {
     if (storageType === 'minio') await addCacheFile(fileName, buffer)
 }
 async function resolvePlaceholders(text = "", user = {}, image = {}) {
+    // placeholders: date, datetime, filesize, name, dimensions
+
     let newText = text;
     newText = newText.replaceAll('[date]', new Date(parseInt(image.timestamp)).toUTCString().split(' ').slice(0, 4).join(' '))
     newText = newText.replaceAll('[datetime]', new Date(parseInt(image.timestamp)).toUTCString())
