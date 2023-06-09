@@ -114,7 +114,7 @@ if (document.cookie.length > 0 && document.cookie.includes('token')) {
         success: (data) => {
             if (data.success) {
                 isLoggedIn = true
-                let tag = `${escapeHtml(data.data.username)}<span class="font-light" id="discriminator">#${data.data.discriminator}</span>`
+                let tag = `${escapeHtml(data.data.username)}<span class="font-light ${data.data.discriminator === '0' ? 'hidden' : ''}" id="discriminator">#${data.data.discriminator}</span>`
                 $(document).ready(() => {
                     if (window.location.pathname.startsWith('/dashboard')) {
                         setupDropdown()
@@ -123,7 +123,7 @@ if (document.cookie.length > 0 && document.cookie.includes('token')) {
                         $('#nav-dropdown').html(`
                         <button id="navbar-dark" class="rounded-full mr-2 align-middle inline-block no-transition"></button>
                         <button class="text-white align-middle inline-block" id="navbar-dropdown">${tag}
-                        <i id="navbar-dropdown-icon" class="inline-block align-middle mb-1">
+                        <i id="navbar-dropdown-icon" class="inline-block align-middle">
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="bi bi-chevron-down" viewBox="0 0 16 16">
                                 <path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/>
                             </svg>

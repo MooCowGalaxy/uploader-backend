@@ -24,7 +24,7 @@
     "heic-convert": "^1.2.4",
     "image-size": "^1.0.1",
     "mime-db": "^1.52.0",
-    "multer": "^1.4.4",
+    "multer": "^1.4.5-lts.1",
     "mysql": "^2.18.1",
     "node-fetch": "^3.2.6",
     "node-schedule": "^2.1.0",
