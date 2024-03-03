@@ -704,7 +704,7 @@ function getRouter({checkForDomain, getUser, prisma, saveFile, deleteFile, consu
         }
 
         // check: file in body
-        if (file.fieldname !== "file") return res.status(400).json({success: false, message: "Invalid file name"})
+        if (file?.fieldname !== "file") return res.status(400).json({success: false, message: "Invalid file name"})
         if (file.originalname.length > 255) return res.status(400).json({success: false, message: 'File name too long'})
 
         let mimetype = await fileTypeFromBuffer(file.buffer)
