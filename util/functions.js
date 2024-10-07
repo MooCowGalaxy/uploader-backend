@@ -29,6 +29,7 @@ module.exports = {
     },
     humanReadableBytes(bytes = 0) {
         if (typeof bytes === 'bigint') bytes = parseInt(bytes)
+        if (isNaN(bytes)) bytes = 0;
         if (bytes >= 1000 * 1000 * 1000 * 1000) {
             return `${Math.round(bytes / (1000 * 1000 * 1000 * 10)) / 100}TB`
         }
